@@ -1,46 +1,49 @@
 # AudioDeviceControl
 
-AudioDeviceControl is a lightweight macOS menu-bar app that automatically switches your audio input & output devices based on a user-defined priority list.  
-It keeps your preferred microphone and speakers active — no matter what you plug in.
+AudioDeviceControl ist eine leichte macOS-Menüleisten-App, die automatisch dein bevorzugtes Audio-Ein- und -Ausgabegerät auswählt, basierend auf einer von dir festgelegten Prioritätsliste. Schluss mit AirPods-Chaos, falschen Mikrofonen und ständigem Umschalten.
+
+![Screenshot](Docs/screenshot.png)
 
 ---
 
-## 🎧 Features
+## Übersicht
 
-- **Drag & Drop Priority Lists**  
-  Order both input and output devices simply by dragging them into your preferred priority.
+macOS neigt dazu, beim Anschließen neuer Geräte das Default-Mikrofon oder den Default-Lautsprecher zu ändern, selbst wenn du das nicht willst. AudioDeviceControl löst dieses Problem dauerhaft:
 
-- **Automatic Device Switching**  
-  When a higher-priority device becomes available, AudioDeviceControl selects it instantly.
-
-- **Smart Device Detection**  
-  Shows connected, active, and offline devices with clear status colors:
-  - 🟢 Active device  
-  - 🔵 Connected but inactive  
-  - ⚪ Offline / not available  
-
-- **Menu Bar Interface**  
-  Clean popup UI — no dock icon, no clutter.
-
-- **Persistent Preferences**  
-  Priority lists are saved and restored across app launches.
+- Du sortierst Input- und Output-Geräte per Drag & Drop nach Priorität.  
+- Die App speichert diese Reihenfolge permanent.  
+- Sobald das Top-Prio-Gerät verfügbar ist, wird es automatisch aktiviert.  
+- Die App läuft sauber in der Menüleiste und aktualisiert sich live.
 
 ---
 
-## 🛠 Requirements
+## Features
 
-- macOS 13.0+
+- **Drag & Drop Priorisierung** für Input & Output Devices  
+- **Automatisches Umschalten**, sobald ein besser priorisiertes Device verfügbar ist  
+- **Statusfarben** für jedes Gerät:  
+  - 🟢 aktiv  
+  - 🔵 verbunden, aber nicht aktiv  
+  - ⚪ offline  
+- **Live Device Detection**  
+- **Persistente Speicherung** der Prioritäten  
+- **Cleanes, minimalistisches macOS UI**  
+- **Kein Dock Icon**, reine Menüleisten-App  
+
+---
+
+## Anforderungen
+
+- macOS 13+
 - Xcode 15+
 - Swift 5.9+
 - CoreAudio.framework
 
 ---
 
-## 🚀 Installation (Development)
+## Installation (Development)
 
-Clone the repository:
-
-```sh
-git clone https://github.com/DEINUSERNAME/AudioDeviceControl.git
+```bash
+git clone https://github.com/DEINNAME/AudioDeviceControl.git
 cd AudioDeviceControl
 open AudioDeviceControl.xcodeproj
