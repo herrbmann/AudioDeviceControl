@@ -1,17 +1,12 @@
-//
-//  AudioDeviceControlApp.swift
-//  AudioDeviceControl
-//
-//  Created by Maik Brüggemann on 14.11.25.
-//
-
 import SwiftUI
 
 @main
 struct AudioDeviceControlApp: App {
+    @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+
     var body: some Scene {
-        WindowGroup {
-            ContentView()
+        Settings {
+            EmptyView()
         }
     }
 }
