@@ -1,9 +1,9 @@
 # AudioDeviceControl
 
 AudioDeviceControl ist eine leichte macOS-Menüleisten-App, die automatisch dein bevorzugtes Audio-Ein- und -Ausgabegerät auswählt, basierend auf einer von dir festgelegten Prioritätsliste. Schluss mit AirPods-Chaos, falschen Mikrofonen und ständigem Umschalten.
+<img width="592" height="908" alt="SCR-20251115-brga" src="https://github.com/user-attachments/assets/625a015b-da24-4d80-ac8a-d1aec87fd185" />
 
-![Scree<img width="592" height="908" alt="SCR-20251115-brga" src="https://github.com/user-attachments/assets/f5454d38-cceb-4052-8101-aa3e1b8f164a" />
-nshot]()
+
 
 ---
 
