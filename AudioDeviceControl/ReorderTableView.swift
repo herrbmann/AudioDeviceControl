@@ -33,7 +33,7 @@ struct ReorderTableView: View {
             .onMove(perform: move)
         }
         .listStyle(.plain)
-        .onChange(of: items) { newValue in
+        .onChange(of: items) { _, newValue in
             localItems = newValue
         }
     }

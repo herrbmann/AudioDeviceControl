@@ -36,5 +36,45 @@ final class DeviceWatcher {
         if status != noErr {
             print("❌ DeviceWatcher Error:", status)
         }
+        
+        // Listen for default input device changes
+        var defInAddr = AudioObjectPropertyAddress(
+            mSelector: kAudioHardwarePropertyDefaultInputDevice,
+            mScope: kAudioObjectPropertyScopeGlobal,
+            mElement: kAudioObjectPropertyElementMain
+        )
+
+        let statusIn = AudioObjectAddPropertyListenerBlock(
+            systemObject,
+            &defInAddr,
+            DispatchQueue.main
+        ) { _, _ in
+            print("🔔 DeviceWatcher: default input changed")
+            AudioState.shared.refresh()
+        }
+
+        if statusIn != noErr {
+            print("❌ DeviceWatcher DefaultInput Error:", statusIn)
+        }
+
+        // Listen for default output device changes
+        var defOutAddr = AudioObjectPropertyAddress(
+            mSelector: kAudioHardwarePropertyDefaultOutputDevice,
+            mScope: kAudioObjectPropertyScopeGlobal,
+            mElement: kAudioObjectPropertyElementMain
+        )
+
+        let statusOut = AudioObjectAddPropertyListenerBlock(
+            systemObject,
+            &defOutAddr,
+            DispatchQueue.main
+        ) { _, _ in
+            print("🔔 DeviceWatcher: default output changed")
+            AudioState.shared.refresh()
+        }
+
+        if statusOut != noErr {
+            print("❌ DeviceWatcher DefaultOutput Error:", statusOut)
+        }
     }
 }

@@ -6,5 +6,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         statusBarController = StatusBarController()
         _ = DeviceWatcher.shared
+        NSApp.setActivationPolicy(.accessory)
     }
 }

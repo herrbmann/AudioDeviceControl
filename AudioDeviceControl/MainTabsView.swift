@@ -1,9 +1,29 @@
 import SwiftUI
 import AppKit
+import ServiceManagement
+
+enum LoginItemManager {
+    static var isEnabled: Bool {
+        switch SMAppService.mainApp.status {
+        case .enabled: return true
+        default: return false
+        }
+    }
+
+    static func setEnabled(_ enabled: Bool) throws {
+        if enabled {
+            try SMAppService.mainApp.register()
+        } else {
+            try SMAppService.mainApp.unregister()
+        }
+    }
+}
 
 struct MainTabsView: View {
 
     @State private var selectedTab = 0
+    @State private var launchAtLogin = false
+    @State private var errorMessage: String?
 
     var body: some View {
         VStack(spacing: 12) {
@@ -24,6 +44,8 @@ struct MainTabsView: View {
             }
             .pickerStyle(.segmented)
             .padding(.horizontal, 20)
+            
+            // Removed Launch at Login Toggle here
 
             // ✳️ Content
             Group {
@@ -79,10 +101,33 @@ struct MainTabsView: View {
             .padding(.horizontal, 18)
             .padding(.top, 6)
 
-            // ✳️ Feedback-Bereich
+            // ✳️ Start app on login section (own separators)
             Divider()
                 .padding(.horizontal, 18)
                 .padding(.top, 6)
+
+            HStack {
+                Spacer(minLength: 0)
+                Toggle("start app on login", isOn: $launchAtLogin)
+                    .onChange(of: launchAtLogin) { oldValue, newValue in
+                        do {
+                            try LoginItemManager.setEnabled(newValue)
+                            // Sync with actual system status
+                            launchAtLogin = LoginItemManager.isEnabled
+                        } catch {
+                            // Rollback on error and show message
+                            launchAtLogin.toggle()
+                            errorMessage = error.localizedDescription
+                        }
+                    }
+                    .toggleStyle(.checkbox)
+                Spacer(minLength: 0)
+            }
+            .padding(.horizontal, 18)
+            .padding(.vertical, 6)
+
+            Divider()
+                .padding(.horizontal, 18)
 
             VStack(spacing: 4) {
                 Text("Got feedback or an idea for a great new feature?")
@@ -90,10 +135,10 @@ struct MainTabsView: View {
                     .foregroundColor(.secondary)
 
                 if let url = URL(string: "mailto:audiocontrol@techbude.com") {
-                    Link("Send us an email at audiocontrol@techbude.com", destination: url)
+                    Link("audiocontrol@techbude.com", destination: url)
                         .font(.callout)
                 } else {
-                    Text("Send us an email at audiocontrol@techbude.com")
+                    Text("audiocontrol@techbude.com")
                         .font(.callout)
                         .foregroundColor(.secondary)
                 }
@@ -121,5 +166,14 @@ struct MainTabsView: View {
             .padding(.bottom, 12)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .onAppear {
+            launchAtLogin = LoginItemManager.isEnabled
+        }
+        .alert("Couldn't update Login Item", isPresented: .constant(errorMessage != nil)) {
+            Button("OK", role: .cancel) { errorMessage = nil }
+        } message: {
+            Text(errorMessage ?? "")
+        }
     }
 }
+
