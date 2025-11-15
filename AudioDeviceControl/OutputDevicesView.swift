@@ -30,8 +30,9 @@ struct OutputDevicesView: View {
                 AudioState.shared.updateOutputOrder(newList)
             }
         )
-        .frame(height: 340)
+        .frame(height: 408)
         .padding(.horizontal, 20)
         .padding(.top, 8)
     }
 }
+

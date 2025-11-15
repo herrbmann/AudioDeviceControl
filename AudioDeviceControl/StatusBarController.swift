@@ -20,7 +20,7 @@ class StatusBarController {
 
         // Configure popover with SwiftUI content
         popover.behavior = .transient
-        popover.contentSize = NSSize(width: 480, height: 480)
+        popover.contentSize = NSSize(width: 520, height: 640)
         popover.contentViewController = NSHostingController(rootView: MainTabsView())
 
         NotificationCenter.default.addObserver(self, selector: #selector(closePopover), name: .closePopoverRequested, object: nil)

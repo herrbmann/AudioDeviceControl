@@ -30,7 +30,7 @@ struct InputDevicesView: View {
                 AudioState.shared.updateInputOrder(newList)
             }
         )
-        .frame(height: 340)
+        .frame(height: 408)
         .padding(.horizontal, 20)
         .padding(.top, 8)
     }

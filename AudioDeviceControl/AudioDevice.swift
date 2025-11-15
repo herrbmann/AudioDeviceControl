@@ -26,13 +26,50 @@ struct AudioDevice: Identifiable, Equatable {
     }
 
     var iconNSImage: NSImage {
-        if isInput {
-            return NSImage(systemSymbolName: "mic.fill", accessibilityDescription: nil) ?? NSImage()
+        func sym(_ name: String) -> NSImage {
+            NSImage(systemSymbolName: name, accessibilityDescription: nil) ?? NSImage()
         }
+
+        let lower = name.lowercased()
+
         if isOutput {
-            return NSImage(systemSymbolName: "speaker.wave.2.fill", accessibilityDescription: nil) ?? NSImage()
+            // Headphones / Headset / AirPods
+            if lower.contains("airpods") || lower.contains("headphone") || lower.contains("headset") {
+                return sym("headphones")
+            }
+            // External speakers / HiFi speakers → use generic speaker as default
+            if lower.contains("hifi") || lower.contains("hi-fi") || lower.contains("speaker") {
+                return sym("speaker.wave.2.fill")
+            }
+            // Displays / Monitors / HDMI / TV
+            if lower.contains("display") || lower.contains("monitor") || lower.contains("hdmi") {
+                return sym("display")
+            }
+            if lower.contains("tv") {
+                return sym("tv")
+            }
+            // Fallback for output
+            return sym("speaker.wave.2.fill")
         }
-        return NSImage(systemSymbolName: "circle", accessibilityDescription: nil) ?? NSImage()
+
+        if isInput {
+            // Headset microphones / AirPods
+            if lower.contains("airpods") || lower.contains("headset") || lower.contains("headphone") {
+                return sym("headphones")
+            }
+            // Built-in / internal mics
+            if lower.contains("built-in") || lower.contains("builtin") || lower.contains("internal") {
+                return sym("mic.fill")
+            }
+            // USB / external mics (generic mic symbol)
+            if lower.contains("usb") || lower.contains("mic") || lower.contains("microphone") {
+                return sym("mic.fill")
+            }
+            // Fallback for input
+            return sym("mic.fill")
+        }
+
+        return sym("circle")
     }
 
     static func == (lhs: AudioDevice, rhs: AudioDevice) -> Bool {

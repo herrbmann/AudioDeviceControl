@@ -55,13 +55,10 @@ final class AudioState: ObservableObject {
         let inputOrder  = PriorityStore.shared.loadInputOrder()
         let outputOrder = PriorityStore.shared.loadOutputOrder()
 
-        // Sortieren (inkl. Offline-Platzhalter für bekannte Geräte)
-        inputDevices  = applyPriority(devices: inputs, storedUIDs: inputOrder)
-        outputDevices = applyPriority(devices: outputs, storedUIDs: outputOrder)
-
-        // Ergänze bekannte, aktuell nicht sichtbare Geräte
-        inputDevices  = appendOfflineKnownDevices(current: inputDevices,  order: inputOrder,  wantInput: true)
-        outputDevices = appendOfflineKnownDevices(current: outputDevices, order: outputOrder, wantInput: false)
+        // Build lists strictly following stored priority order.
+        // Missing devices are shown as offline placeholders at their original positions.
+        inputDevices  = buildDeviceList(devices: inputs, storedUIDs: inputOrder, wantInput: true)
+        outputDevices = buildDeviceList(devices: outputs, storedUIDs: outputOrder, wantInput: false)
 
         print("📌 INPUT Devices:", inputDevices.map { $0.name })
         print("📌 OUTPUT Devices:", outputDevices.map { $0.name })
@@ -83,8 +80,56 @@ final class AudioState: ObservableObject {
         refresh()
     }
 
-    // MARK: Priority Logic
+    // MARK: - Build prioritized list including offline placeholders (display only)
+    private func buildDeviceList(devices: [AudioDevice],
+                                 storedUIDs: [String],
+                                 wantInput: Bool) -> [AudioDevice] {
+        var result: [AudioDevice] = []
 
+        // Fast lookup for currently present devices by UID
+        let presentByUID: [String: AudioDevice] = Dictionary(uniqueKeysWithValues: devices.map { ($0.persistentUID, $0) })
+
+        // 1) Place all stored UIDs in exact order, using present device or offline placeholder
+        for uid in storedUIDs {
+            if let dev = presentByUID[uid] {
+                result.append(dev)
+            } else if let meta = DeviceRegistry.shared.metadata(for: uid) {
+                // Only include if it matches the desired direction
+                if (wantInput && meta.isInput) || (!wantInput && meta.isOutput) {
+                    let placeholder = AudioDeviceFactory.makeOffline(uid: uid,
+                                                                     name: meta.name,
+                                                                     isInput: meta.isInput,
+                                                                     isOutput: meta.isOutput)
+                    result.append(placeholder)
+                }
+            }
+        }
+
+        // 2) Append any currently present devices that are not yet in stored order (new devices)
+        for dev in devices {
+            if !result.contains(where: { $0.persistentUID == dev.persistentUID }) {
+                result.append(dev)
+            }
+        }
+
+        // 3) Optionally append any other known devices (not in order, not present) as offline placeholders
+        let knownUIDs = DeviceRegistry.shared.storedUIDs
+        for uid in knownUIDs where !result.contains(where: { $0.persistentUID == uid }) {
+            if let meta = DeviceRegistry.shared.metadata(for: uid) {
+                if (wantInput && meta.isInput) || (!wantInput && meta.isOutput) {
+                    let placeholder = AudioDeviceFactory.makeOffline(uid: uid,
+                                                                     name: meta.name,
+                                                                     isInput: meta.isInput,
+                                                                     isOutput: meta.isOutput)
+                    result.append(placeholder)
+                }
+            }
+        }
+
+        return result
+    }
+
+    // NOTE: Superseded by buildDeviceList() for display ordering that preserves offline positions.
     private func applyPriority(devices: [AudioDevice], storedUIDs: [String]) -> [AudioDevice] {
 
         var ordered: [AudioDevice] = []
