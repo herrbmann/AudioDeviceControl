@@ -7,7 +7,6 @@
 
 AudioDeviceControl is a lightweight macOS menu bar app that automatically selects your preferred audio input and output device — based on a priority list you define. No more AirPods chaos, wrong microphones, or constant switching.
 
-> Tip: Add your own images in the "Screenshots" section below when you’re ready.
 
 ---
 
