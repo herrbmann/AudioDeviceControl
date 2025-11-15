@@ -19,22 +19,32 @@ struct ReorderTableView: View {
     }
 
     var body: some View {
-        List {
-            ForEach(localItems) { device in
-                let (icon, name, subtitle, statusColor) = makeDisplayData(device)
-                DeviceTableCellView(
-                    icon: icon,
-                    name: name,
-                    subtitle: subtitle,
-                    statusColor: statusColor
-                )
-                .padding(.vertical, 4)
+        VStack(spacing: 6) {
+            Image(systemName: "arrow.up.arrow.down.circle")
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundColor(.secondary)
+                .accessibilityLabel(Text("Drag to reorder"))
+
+            List {
+                ForEach(localItems) { device in
+                    let (icon, name, subtitle, statusColor) = makeDisplayData(device)
+                    DeviceTableCellView(
+                        icon: icon,
+                        name: name,
+                        subtitle: subtitle,
+                        statusColor: statusColor
+                    )
+                    .padding(.vertical, 4)
+                    .listRowBackground(Color.clear)
+                }
+                .onMove(perform: move)
             }
-            .onMove(perform: move)
-        }
-        .listStyle(.plain)
-        .onChange(of: items) { _, newValue in
-            localItems = newValue
+            .scrollContentBackground(.hidden)
+            .background(Color.clear)
+            .listStyle(.plain)
+            .onChange(of: items) { _, newValue in
+                localItems = newValue
+            }
         }
     }
 

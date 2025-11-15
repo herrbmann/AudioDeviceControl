@@ -4,7 +4,7 @@ import SwiftUI
 class StatusBarController {
 
     private var statusItem: NSStatusItem
-    private var windowController: NSWindowController?
+    private let popover: NSPopover = NSPopover()
 
     init() {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
@@ -15,57 +15,38 @@ class StatusBarController {
             button.image?.isTemplate = true
 
             button.target = self
-            button.action = #selector(toggleWindow)
+            button.action = #selector(togglePopover)
         }
+
+        // Configure popover with SwiftUI content
+        popover.behavior = .transient
+        popover.contentSize = NSSize(width: 480, height: 480)
+        popover.contentViewController = NSHostingController(rootView: MainTabsView())
+
+        NotificationCenter.default.addObserver(self, selector: #selector(closePopover), name: .closePopoverRequested, object: nil)
     }
 
-    @objc private func toggleWindow() {
-        if let wc = windowController, wc.window?.isVisible == true {
-            wc.close()
+    @objc private func togglePopover() {
+        if popover.isShown {
+            popover.performClose(nil)
         } else {
-            openWindowUnderStatusItem()
+            showPopover()
         }
     }
 
-    private func openWindowUnderStatusItem() {
-
-        let content = MainTabsView()
-        let hosting = NSHostingController(rootView: content)
-
-        let windowWidth: CGFloat = 480
-        let windowHeight: CGFloat = 480
-
-        let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: windowWidth, height: windowHeight),
-            styleMask: [.titled],
-            backing: .buffered,
-            defer: false
-        )
-
-        window.titleVisibility = .hidden
-        window.titlebarAppearsTransparent = true
-
-        window.standardWindowButton(.closeButton)?.isHidden = true
-        window.standardWindowButton(.miniaturizeButton)?.isHidden = true
-        window.standardWindowButton(.zoomButton)?.isHidden = true
-
-        window.isMovableByWindowBackground = true
-        window.isReleasedWhenClosed = false
-        window.contentView = hosting.view
-
-        if let button = statusItem.button {
-            let buttonFrame = button.window?.convertToScreen(button.frame) ?? .zero
-
-            let x = buttonFrame.midX - windowWidth / 2
-            let y = buttonFrame.minY - windowHeight - 4
-
-            window.setFrameOrigin(NSPoint(x: x, y: y))
-        }
-
-        let wc = NSWindowController(window: window)
-        windowController = wc
-        wc.showWindow(nil)
-
+    private func showPopover() {
+        guard let button = statusItem.button else { return }
+        popover.show(relativeTo: button.bounds, of: button, preferredEdge: .maxY)
         NSApp.activate(ignoringOtherApps: true)
     }
+
+    @objc private func closePopover() {
+        if popover.isShown {
+            popover.performClose(nil)
+        }
+    }
+}
+
+extension Notification.Name {
+    static let closePopoverRequested = Notification.Name("closePopoverRequested")
 }

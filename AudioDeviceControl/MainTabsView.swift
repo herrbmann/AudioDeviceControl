@@ -24,6 +24,7 @@ struct MainTabsView: View {
     @State private var selectedTab = 0
     @State private var launchAtLogin = false
     @State private var errorMessage: String?
+    @State private var showQuitConfirm = false
 
     var body: some View {
         VStack(spacing: 12) {
@@ -158,11 +159,22 @@ struct MainTabsView: View {
 
             Spacer(minLength: 8)
 
-            // ✳️ Close Button unten
-            Button("Close") {
-                NSApplication.shared.keyWindow?.close()
+            // ✳️ Bottom Buttons: Beenden (links) & Close (rechts)
+            HStack {
+                Button("Quit App") {
+                    showQuitConfirm = true
+                }
+                .buttonStyle(.bordered)
+
+                Spacer(minLength: 12)
+
+                Button("Close") {
+                    // Close the popover via notification to StatusBarController
+                    NotificationCenter.default.post(name: .closePopoverRequested, object: nil)
+                }
+                .buttonStyle(.borderedProminent)
             }
-            .buttonStyle(.borderedProminent)
+            .padding(.horizontal, 18)
             .padding(.bottom, 12)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -173,6 +185,14 @@ struct MainTabsView: View {
             Button("OK", role: .cancel) { errorMessage = nil }
         } message: {
             Text(errorMessage ?? "")
+        }
+        .alert("App wirklich beenden?", isPresented: $showQuitConfirm) {
+            Button("Abbrechen", role: .cancel) {}
+            Button("Jetzt beenden", role: .destructive) {
+                NSApp.terminate(nil)
+            }
+        } message: {
+            Text("Möchtest du AudioDeviceControl jetzt beenden?")
         }
     }
 }

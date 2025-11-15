@@ -150,4 +150,37 @@ final class AudioDeviceFactory {
 
         return status == noErr && alive != 0
     }
+
+    // ---------------------------------------------------------
+    // MARK: - Offline Placeholder
+    // ---------------------------------------------------------
+
+    static func makeOffline(uid: String,
+                            name: String,
+                            isInput: Bool,
+                            isOutput: Bool) -> AudioDevice {
+
+        let fake = fakeID(forUID: uid)
+        return AudioDevice(
+            id: fake,
+            name: name,
+            uid: uid,
+            isInput: isInput,
+            isOutput: isOutput,
+            isAlive: false,
+            isDefault: false
+        )
+    }
+
+    /// Deterministic 32-bit hash for stable fake IDs (FNV-1a)
+    private static func fakeID(forUID uid: String) -> AudioDeviceID {
+        var hash: UInt32 = 2166136261
+        for byte in uid.utf8 {
+            hash ^= UInt32(byte)
+            hash &*= 16777619
+        }
+        // Set high bit to reduce collision with real IDs
+        let withFlag = hash | 0x8000_0000
+        return AudioDeviceID(withFlag)
+    }
 }

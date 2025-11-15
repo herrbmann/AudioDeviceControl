@@ -1,42 +1,78 @@
 import Foundation
 
-/// Speichert nur die Liste der bekannten Device-UIDs.
-/// AudioDevice selbst wird NICHT encoded.
+/// Speichert bekannte Geräte-UIDs und Metadaten (Name, Input/Output).
 final class DeviceRegistry {
 
     static let shared = DeviceRegistry()
 
-    private let key = "knownAudioDevices"
+    private let keyUIDs  = "knownAudioDevices"                // bestehender Key (Kompatibilität)
+    private let keyMeta  = "knownAudioDevicesMeta_v2"         // neuer Key für Metadaten (Codable)
     private let defaults = UserDefaults.standard
+
+    struct Metadata: Codable {
+        var name: String
+        var isInput: Bool
+        var isOutput: Bool
+    }
 
     private init() {}
 
-    /// Liste aller gespeicherten Gerät-UIDs
+    // MARK: - Alte API (Kompatibilität)
+
+    /// Liste aller gespeicherten Gerät-UIDs (Kompatibilität)
     var storedUIDs: [String] {
-        get {
-            defaults.stringArray(forKey: key) ?? []
+        get { defaults.stringArray(forKey: keyUIDs) ?? [] }
+        set { defaults.set(newValue, forKey: keyUIDs) }
+    }
+
+    // MARK: - Metadaten speichern/laden
+
+    private func loadMetaDict() -> [String: Metadata] {
+        if let data = defaults.data(forKey: keyMeta) {
+            if let dict = try? JSONDecoder().decode([String: Metadata].self, from: data) {
+                return dict
+            }
         }
-        set {
-            defaults.set(newValue, forKey: key)
+        return [:]
+    }
+
+    private func saveMetaDict(_ dict: [String: Metadata]) {
+        if let data = try? JSONEncoder().encode(dict) {
+            defaults.set(data, forKey: keyMeta)
         }
     }
 
-    /// Fügt ein Gerät hinzu, wenn es neu ist
+    func metadata(for uid: String) -> Metadata? {
+        let dict = loadMetaDict()
+        return dict[uid]
+    }
+
+    // MARK: - Registrierung
+
+    /// Fügt ein Gerät hinzu (inkl. Metadaten) falls neu, oder aktualisiert Metadaten falls bekannt.
     func registerIfNeeded(_ device: AudioDevice) {
+        // UID-Liste pflegen (Kompatibilität)
         var list = storedUIDs
         if !list.contains(device.uid) {
             list.append(device.uid)
             storedUIDs = list
         }
+        // Metadaten aktualisieren
+        var meta = loadMetaDict()
+        meta[device.uid] = Metadata(name: device.name, isInput: device.isInput, isOutput: device.isOutput)
+        saveMetaDict(meta)
     }
 
-    /// Registriert mehrere Geräte gleichzeitig
+    /// Registriert mehrere Geräte gleichzeitig (inkl. Metadaten).
     func registerDevices(_ devices: [AudioDevice]) {
-        var list = Set(storedUIDs)
+        var uidSet = Set(storedUIDs)
+        var meta = loadMetaDict()
         for dev in devices {
-            list.insert(dev.uid)
+            uidSet.insert(dev.uid)
+            meta[dev.uid] = Metadata(name: dev.name, isInput: dev.isInput, isOutput: dev.isOutput)
         }
-        storedUIDs = Array(list)
+        storedUIDs = Array(uidSet)
+        saveMetaDict(meta)
     }
 
     /// Prüft, ob ein Gerät bereits bekannt ist
