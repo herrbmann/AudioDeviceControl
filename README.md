@@ -72,9 +72,13 @@ macOS tends to change the default microphone or default speakers when new device
 
 ---
 
-## Installation (Development)
+## Installation:
+go to [releases](https://github.com/MaikTB/AudioDeviceControl/releases/tag/audiodevice) and download the latest dmg.
 
-```bash
-git clone https://github.com/YOURNAME/AudioDeviceControl.git
-cd AudioDeviceControl
-open AudioDeviceControl.xcodeproj
+## Please note:
+This project started as a small hobby experiment—basically some vibe coding—because I couldn’t find any existing solution that worked the way I wanted. Since I’m not interested in paying €99 for an Apple developer certificate, the app isn’t code-signed. Because of that, macOS will block it the first time you try to open it.
+
+If your Mac blocks the app, you can manually allow it:
+System Settings → Privacy & Security → “Open Anyway
+
+
