@@ -6,6 +6,12 @@ import AppKit
 // MARK: - AudioDevice Model
 // ---------------------------------------------------------
 
+enum DeviceState {
+    case active
+    case connected
+    case offline
+}
+
 struct AudioDevice: Identifiable, Equatable {
 
     let id: AudioDeviceID
@@ -16,13 +22,32 @@ struct AudioDevice: Identifiable, Equatable {
     let isAlive: Bool
     let isDefault: Bool
 
+    var state: DeviceState {
+        if !isAlive { return .offline }
+        return isDefault ? .active : .connected
+    }
+    
+    var identityKey: String { persistentUID + "|" + stateKey }
+    private var stateKey: String {
+        switch state {
+        case .active: return "A"
+        case .connected: return "C"
+        case .offline: return "O"
+        }
+    }
+
     var persistentUID: String { uid }
     var isConnected: Bool { isAlive }
 
     var statusColorNS: NSColor {
-        if !isAlive { return .systemGray }
-        if isDefault { return .systemGreen }
-        return .systemBlue
+        switch state {
+        case .offline:
+            return .systemGray
+        case .active:
+            return .systemGreen
+        case .connected:
+            return .systemBlue
+        }
     }
 
     var iconNSImage: NSImage {

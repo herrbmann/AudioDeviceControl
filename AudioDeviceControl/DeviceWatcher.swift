@@ -4,6 +4,20 @@ import CoreAudio
 final class DeviceWatcher {
 
     static let shared = DeviceWatcher()
+    
+    private var pendingRefresh: DispatchWorkItem?
+    private let debounceInterval: TimeInterval = 0.15
+
+    private func scheduleRefresh() {
+        pendingRefresh?.cancel()
+        let work = DispatchWorkItem { [weak self] in
+            DispatchQueue.main.async {
+                AudioState.shared.refresh()
+            }
+        }
+        pendingRefresh = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + debounceInterval, execute: work)
+    }
 
     private init() {
         startListening()
@@ -22,7 +36,7 @@ final class DeviceWatcher {
         // Listener ohne Rückgabewert!
         let callback: AudioObjectPropertyListenerBlock = { _, _ in
             print("🔔 DeviceWatcher: devices changed")
-            AudioState.shared.refresh()
+            self.scheduleRefresh()
             // ❌ Kein return noErr → der Closure hat return Void
         }
 
@@ -50,7 +64,7 @@ final class DeviceWatcher {
             DispatchQueue.main
         ) { _, _ in
             print("🔔 DeviceWatcher: default input changed")
-            AudioState.shared.refresh()
+            self.scheduleRefresh()
         }
 
         if statusIn != noErr {
@@ -70,7 +84,7 @@ final class DeviceWatcher {
             DispatchQueue.main
         ) { _, _ in
             print("🔔 DeviceWatcher: default output changed")
-            AudioState.shared.refresh()
+            self.scheduleRefresh()
         }
 
         if statusOut != noErr {
@@ -78,3 +92,4 @@ final class DeviceWatcher {
         }
     }
 }
+

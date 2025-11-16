@@ -11,6 +11,8 @@ final class AudioState: ObservableObject {
 
     @Published var defaultInputID: AudioDeviceID = 0
     @Published var defaultOutputID: AudioDeviceID = 0
+    
+    @Published var listVersion: Int = 0
 
     private init() {
         refresh()
@@ -57,13 +59,19 @@ final class AudioState: ObservableObject {
 
         // Build lists strictly following stored priority order.
         // Missing devices are shown as offline placeholders at their original positions.
-        inputDevices  = buildDeviceList(devices: inputs, storedUIDs: inputOrder, wantInput: true)
-        outputDevices = buildDeviceList(devices: outputs, storedUIDs: outputOrder, wantInput: false)
+        let newInputDevices  = buildDeviceList(devices: inputs, storedUIDs: inputOrder, wantInput: true)
+        let newOutputDevices = buildDeviceList(devices: outputs, storedUIDs: outputOrder, wantInput: false)
 
-        print("📌 INPUT Devices:", inputDevices.map { $0.name })
-        print("📌 OUTPUT Devices:", outputDevices.map { $0.name })
+        DispatchQueue.main.async {
+            self.inputDevices  = newInputDevices
+            self.outputDevices = newOutputDevices
 
-        applyAutoSelection()
+            print("📌 INPUT Devices:", self.inputDevices.map { $0.name })
+            print("📌 OUTPUT Devices:", self.outputDevices.map { $0.name })
+
+            self.applyAutoSelection()
+            self.listVersion &+= 1
+        }
     }
 
     // MARK: Update Priority from UI
@@ -213,3 +221,4 @@ final class AudioState: ObservableObject {
         }
     }
 }
+

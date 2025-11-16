@@ -11,24 +11,23 @@ struct InputDevicesView: View {
             makeDisplayData: { device in
 
                 let subtitle: String
-                if !device.isConnected {
+                switch device.state {
+                case .offline:
                     subtitle = "Offline"
-                } else if device.id == state.defaultInputID {
+                case .active:
                     subtitle = "Active Input"
-                } else {
-                    subtitle = "Connected"
+                case .connected:
+                    subtitle = "Connected but not active"
                 }
 
-                let color: NSColor =
-                    device.id == state.defaultInputID
-                    ? .systemGreen
-                    : (device.isConnected ? .systemBlue : .systemGray)
+                let color: NSColor = device.statusColorNS
 
                 return (device.iconNSImage, device.name, subtitle, color)
             },
             onReorder: { newList in
                 AudioState.shared.updateInputOrder(newList)
-            }
+            },
+            version: state.listVersion
         )
         .frame(height: 408)
         .padding(.horizontal, 20)
