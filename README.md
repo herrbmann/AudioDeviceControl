@@ -16,7 +16,7 @@ AudioDeviceControl is a lightweight macOS menu bar app that automatically select
 
 - Main Window (Prioritization & Status)
 
-<img width="552" height="890" alt="image" src="https://github.com/user-attachments/assets/c38afd2e-fd18-403d-8395-a9aa545da3b3" />
+<img width="563" height="954" alt="image" src="https://github.com/user-attachments/assets/0c49771e-c78d-484f-aa8a-aa37205fdd8d" />
 
 
 - Menu Bar Status
