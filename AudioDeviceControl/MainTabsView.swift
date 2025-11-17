@@ -130,11 +130,41 @@ struct MainTabsView: View {
             Divider()
                 .padding(.horizontal, 18)
 
-            VStack(spacing: 4) {
-                Text("Got feedback or an idea for a great new feature?")
+            VStack(spacing: 8) {
+                Text("Like my app? Feel free to")
                     .font(.callout)
                     .foregroundColor(.secondary)
 
+                // Buy me a coffee (in feedback section)
+                HStack {
+                    Spacer(minLength: 0)
+                    Button {
+                        if let url = URL(string: "https://ko-fi.com/X7X01OMYL7") {
+                            NSWorkspace.shared.open(url)
+                        }
+                    } label: {
+                        HStack(spacing: 6) {
+                            Image(systemName: "cup.and.saucer")
+                                .imageScale(.small)
+                            Text("Buy me a coffee")
+                        }
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 6)
+                    }
+                    .buttonStyle(.bordered)
+                    .tint(Color(red: 180/255, green: 115/255, blue: 245/255)) // #b473f5
+                    Spacer(minLength: 0)
+                }
+            }
+            .multilineTextAlignment(.center)
+            .padding(.horizontal, 18)
+
+            // ✳️ Footer-Credit
+            Divider()
+                .padding(.horizontal, 18)
+                .padding(.top, 6)
+
+            VStack(spacing: 4) {
                 if let url = URL(string: "mailto:audiocontrol@techbude.com") {
                     Link("audiocontrol@techbude.com", destination: url)
                         .font(.callout)
@@ -146,11 +176,6 @@ struct MainTabsView: View {
             }
             .multilineTextAlignment(.center)
             .padding(.horizontal, 18)
-
-            // ✳️ Footer-Credit
-            Divider()
-                .padding(.horizontal, 18)
-                .padding(.top, 6)
 
             // App Version
             if let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String,
@@ -204,4 +229,3 @@ struct MainTabsView: View {
         }
     }
 }
-
