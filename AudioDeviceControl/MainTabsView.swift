@@ -152,6 +152,14 @@ struct MainTabsView: View {
                 .padding(.horizontal, 18)
                 .padding(.top, 6)
 
+            // App Version
+            if let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String,
+               let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String {
+                Text("Version \(version) (\(build))")
+                    .font(.footnote)
+                    .foregroundColor(.secondary)
+            }
+
             Text("made without a clue by techbude")
                 .font(.footnote)
                 .foregroundColor(.secondary)
