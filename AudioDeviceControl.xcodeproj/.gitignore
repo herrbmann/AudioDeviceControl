@@ -1,0 +1,41 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Xcode
+build/
+DerivedData/
+*.moved-aside
+*.xccheckout
+*.xcscmblueprint
+*.xcuserstate
+*.xcuserdatad/
+
+# Xcode workspace user data
+*.xcworkspace/xcuserdata/
+
+# Swift Package Manager
+.swiftpm/
+.build/
+Packages/
+# Keep Package.resolved tracked for reproducible builds (do not ignore)
+
+# Carthage (not used, keep commented)
+# Carthage/Build/
+
+# CocoaPods (not used, keep commented)
+# Pods/
+
+# Fastlane (if used)
+# fastlane/report.xml
+# fastlane/Preview.html
+# fastlane/screenshots
+# fastlane/test_output
+
+# Logs
+*.log
+
+# Local documentation / agent notes (do not push)
+PROJECT_OVERVIEW.md
+
