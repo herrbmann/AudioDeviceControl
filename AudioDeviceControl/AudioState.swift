@@ -8,6 +8,7 @@ final class AudioState: ObservableObject {
 
     @Published var inputDevices: [AudioDevice] = []
     @Published var outputDevices: [AudioDevice] = []
+    @Published var showIgnored: Bool = false
 
     @Published var defaultInputID: AudioDeviceID = 0
     @Published var defaultOutputID: AudioDeviceID = 0
@@ -28,6 +29,8 @@ final class AudioState: ObservableObject {
         defaultInputID = AudioDeviceManager.shared.getDefaultInputDevice()
         defaultOutputID = AudioDeviceManager.shared.getDefaultOutputDevice()
 
+        let ignored = Set(PriorityStore.shared.loadIgnoredUIDs())
+
         var inputs: [AudioDevice] = []
         var outputs: [AudioDevice] = []
 
@@ -45,6 +48,9 @@ final class AudioState: ObservableObject {
                 defaultInputID: defaultInputID,
                 defaultOutputID: defaultOutputID
             ) else { continue }
+
+            // Skip ignored devices unless showIgnored is enabled
+            if !showIgnored && ignored.contains(device.persistentUID) { continue }
 
             if device.isInput { inputs.append(device) }
             if device.isOutput { outputs.append(device) }
@@ -134,6 +140,12 @@ final class AudioState: ObservableObject {
             }
         }
 
+        // Filter out ignored devices unless showIgnored is true
+        if !showIgnored {
+            let ignored = Set(PriorityStore.shared.loadIgnoredUIDs())
+            result.removeAll { ignored.contains($0.persistentUID) }
+        }
+
         return result
     }
 
@@ -220,5 +232,16 @@ final class AudioState: ObservableObject {
             }
         }
     }
-}
 
+    // MARK: - Ignore handling
+
+    func ignoreDevice(_ device: AudioDevice) {
+        PriorityStore.shared.addIgnoredUID(device.persistentUID)
+        refresh()
+    }
+
+    func unignoreAllDevices() {
+        PriorityStore.shared.clearIgnoredUIDs()
+        refresh()
+    }
+}

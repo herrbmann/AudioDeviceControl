@@ -16,12 +16,22 @@ struct ReorderTableView: View {
             List {
                 ForEach(items, id: \.identityKey) { device in
                     let (icon, name, subtitle, statusColor) = makeDisplayData(device)
-                    DeviceTableCellView(
-                        icon: icon,
-                        name: name,
-                        subtitle: subtitle,
-                        statusColor: statusColor
-                    )
+                    HStack(spacing: 12) {
+                        DeviceTableCellView(
+                            icon: icon,
+                            name: name,
+                            subtitle: subtitle,
+                            statusColor: statusColor
+                        )
+                        let isIgnored = PriorityStore.shared.loadIgnoredUIDs().contains(device.persistentUID)
+                        Button {
+                            AudioState.shared.ignoreDevice(device)
+                        } label: {
+                            Image(systemName: isIgnored ? "eye.slash" : "eye")
+                                .help(isIgnored ? "Ignored" : "Visible")
+                        }
+                        .buttonStyle(.borderless)
+                    }
                     .padding(.vertical, 4)
                     .listRowBackground(Color.clear)
                 }

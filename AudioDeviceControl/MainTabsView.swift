@@ -1,6 +1,7 @@
 import SwiftUI
 import AppKit
 import ServiceManagement
+import Foundation
 
 enum LoginItemManager {
     static var isEnabled: Bool {
@@ -25,6 +26,7 @@ struct MainTabsView: View {
     @State private var launchAtLogin = false
     @State private var errorMessage: String?
     @State private var showQuitConfirm = false
+    @ObservedObject private var audioState = AudioState.shared
 
     var body: some View {
         VStack(spacing: 12) {
@@ -57,6 +59,30 @@ struct MainTabsView: View {
                 }
             }
             .padding(.top, 4)
+
+            // ✳️ Ignored devices controls
+            HStack(spacing: 12) {
+                Button {
+                    audioState.showIgnored.toggle()
+                    audioState.refresh()
+                } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: audioState.showIgnored ? "eye.slash" : "eye")
+                        Text(audioState.showIgnored ? "Hide ignored devices" : "Show ignored devices")
+                    }
+                }
+                .buttonStyle(.bordered)
+
+                Button("Unignore all") {
+                    AudioState.shared.unignoreAllDevices()
+                }
+                .buttonStyle(.bordered)
+                .disabled(PriorityStore.shared.loadIgnoredUIDs().isEmpty)
+            }
+            .padding(.horizontal, 18)
+
+            Divider()
+                .padding(.horizontal, 18)
 
             // ✳️ Tutorial / Short Description
             VStack(spacing: 8) {
