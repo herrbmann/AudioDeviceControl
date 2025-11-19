@@ -52,7 +52,14 @@ macOS tends to change the default microphone or default speakers when new device
 
 ---
 
-## New in this version
+## New in version 1.0.3
+
+- **Update Checker**: Automatic update notifications with manual check option
+- **New Status Bar Icon**: Custom waveform icon for better visual distinction
+- **Bug Fixes**: Memory leak fixes and improved error handling
+- **UI Improvements**: Better text rendering and layout fixes
+
+## Previous versions
 
 - More reliable detection of input/output capabilities per device (CoreAudio-based)
 - More robust retrieval of default devices (input & output) and faster switching
@@ -73,7 +80,7 @@ macOS tends to change the default microphone or default speakers when new device
 ---
 
 ## Installation:
-go to [releases](https://github.com/MaikTB/AudioDeviceControl/releases) and download the latest dmg.
+go to [releases](https://github.com/herrbmann/AudioDeviceControl/releases) and download the latest dmg.
 
 ## Please note:
 This project started as a small hobby experiment—basically some vibe coding—because I couldn’t find any existing solution that worked the way I wanted. Since I’m not interested in paying €99 for an Apple developer certificate, the app isn’t code-signed. Because of that, macOS will block it the first time you try to open it.

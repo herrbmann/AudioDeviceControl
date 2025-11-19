@@ -24,9 +24,11 @@ struct MainTabsView: View {
 
     @State private var selectedTab = 0
     @State private var launchAtLogin = false
+    @State private var updateCheckEnabled = true
     @State private var errorMessage: String?
     @State private var showQuitConfirm = false
     @ObservedObject private var audioState = AudioState.shared
+    @ObservedObject private var updateChecker = UpdateChecker.shared
 
     var body: some View {
         VStack(spacing: 12) {
@@ -122,6 +124,7 @@ struct MainTabsView: View {
                     .font(.callout)
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
                     .padding(.top, 4)
             }
             .multilineTextAlignment(.center)
@@ -133,22 +136,34 @@ struct MainTabsView: View {
                 .padding(.horizontal, 18)
                 .padding(.top, 6)
 
-            HStack {
-                Spacer(minLength: 0)
-                Toggle("start app on login", isOn: $launchAtLogin)
-                    .onChange(of: launchAtLogin) { oldValue, newValue in
-                        do {
-                            try LoginItemManager.setEnabled(newValue)
-                            // Sync with actual system status
-                            launchAtLogin = LoginItemManager.isEnabled
-                        } catch {
-                            // Rollback on error and show message
-                            launchAtLogin.toggle()
-                            errorMessage = error.localizedDescription
+            VStack(spacing: 8) {
+                HStack {
+                    Spacer(minLength: 0)
+                    Toggle("start app on login", isOn: $launchAtLogin)
+                        .onChange(of: launchAtLogin) { oldValue, newValue in
+                            do {
+                                try LoginItemManager.setEnabled(newValue)
+                                // Sync with actual system status
+                                launchAtLogin = LoginItemManager.isEnabled
+                            } catch {
+                                // Rollback on error and show message
+                                launchAtLogin.toggle()
+                                errorMessage = error.localizedDescription
+                            }
                         }
-                    }
-                    .toggleStyle(.checkbox)
-                Spacer(minLength: 0)
+                        .toggleStyle(.checkbox)
+                    Spacer(minLength: 0)
+                }
+                
+                HStack {
+                    Spacer(minLength: 0)
+                    Toggle("automatically check for updates", isOn: $updateCheckEnabled)
+                        .onChange(of: updateCheckEnabled) { oldValue, newValue in
+                            UpdateStore.shared.setUpdateCheckEnabled(newValue)
+                        }
+                        .toggleStyle(.checkbox)
+                    Spacer(minLength: 0)
+                }
             }
             .padding(.horizontal, 18)
             .padding(.vertical, 6)
@@ -203,12 +218,51 @@ struct MainTabsView: View {
             .multilineTextAlignment(.center)
             .padding(.horizontal, 18)
 
+            // Update Status
+            if case .updateAvailable(let info) = updateChecker.updateStatus {
+                VStack(spacing: 6) {
+                    HStack(spacing: 8) {
+                        Image(systemName: "arrow.down.circle.fill")
+                            .foregroundColor(.orange)
+                        Text("Update verfügbar: Version \(info.latestVersion)")
+                            .font(.footnote)
+                            .foregroundColor(.secondary)
+                    }
+                    Button {
+                        updateChecker.openReleasePage()
+                    } label: {
+                        HStack(spacing: 4) {
+                            Image(systemName: "arrow.down.circle")
+                            Text("Jetzt updaten")
+                        }
+                        .font(.footnote)
+                    }
+                    .buttonStyle(.bordered)
+                }
+                .padding(.top, 4)
+            }
+            
             // App Version
-            if let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String,
-               let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String {
-                Text("Version \(version) (\(build))")
-                    .font(.footnote)
-                    .foregroundColor(.secondary)
+            if let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String {
+                HStack(spacing: 8) {
+                    Text("Version \(version)")
+                        .font(.footnote)
+                        .foregroundColor(.secondary)
+                    
+                    if updateChecker.isChecking {
+                        ProgressView()
+                            .scaleEffect(0.6)
+                    } else {
+                        Button {
+                            updateChecker.checkForUpdates(force: true)
+                        } label: {
+                            Image(systemName: "arrow.clockwise")
+                                .font(.system(size: 10))
+                        }
+                        .buttonStyle(.borderless)
+                        .help("Jetzt nach Updates prüfen")
+                    }
+                }
             }
 
             Text("made without a clue by techbude")
@@ -239,6 +293,7 @@ struct MainTabsView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .onAppear {
             launchAtLogin = LoginItemManager.isEnabled
+            updateCheckEnabled = UpdateStore.shared.isUpdateCheckEnabled()
         }
         .alert("Couldn't update Login Item", isPresented: .constant(errorMessage != nil)) {
             Button("OK", role: .cancel) { errorMessage = nil }

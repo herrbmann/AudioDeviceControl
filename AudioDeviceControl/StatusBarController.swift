@@ -10,8 +10,8 @@ class StatusBarController {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
 
         if let button = statusItem.button {
-            // 🎧 Kopfhörer-Icon (Template → automatisch hell/dunkel angepasst)
-            button.image = NSImage(systemSymbolName: "headphones", accessibilityDescription: nil)
+            // Waveform Icon (Template → automatisch hell/dunkel angepasst)
+            button.image = NSImage(named: "StatusBarIcon")
             button.image?.isTemplate = true
 
             button.target = self
@@ -44,6 +44,10 @@ class StatusBarController {
         if popover.isShown {
             popover.performClose(nil)
         }
+    }
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self)
     }
 }
 
