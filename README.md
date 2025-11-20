@@ -72,7 +72,7 @@ macOS tends to change the default microphone or default speakers when new device
 
 ## Requirements
 
-- macOS 13+
+- macOS 14+
 - Xcode 15+
 - Swift 5.9+
 - CoreAudio.framework
