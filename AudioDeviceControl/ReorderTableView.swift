@@ -23,14 +23,7 @@ struct ReorderTableView: View {
                             subtitle: subtitle,
                             statusColor: statusColor
                         )
-                        let isIgnored = PriorityStore.shared.loadIgnoredUIDs().contains(device.persistentUID)
-                        Button {
-                            AudioState.shared.ignoreDevice(device)
-                        } label: {
-                            Image(systemName: isIgnored ? "eye.slash" : "eye")
-                                .help(isIgnored ? "Ignored" : "Visible")
-                        }
-                        .buttonStyle(.borderless)
+                        Spacer()
                     }
                     .padding(.vertical, 4)
                     .listRowBackground(Color.clear)

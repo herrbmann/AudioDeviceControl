@@ -27,7 +27,12 @@ struct AudioDevice: Identifiable, Equatable {
         return isDefault ? .active : .connected
     }
     
-    var identityKey: String { persistentUID + "|" + stateKey }
+    // WICHTIG: identityKey muss stabil sein, basierend nur auf UID
+    // Der State ändert sich (offline -> connected -> active), aber die Identität bleibt gleich
+    // Dies verhindert, dass SwiftUI das Element als "neu" behandelt und die Liste neu scrollt
+    var identityKey: String { persistentUID }
+    
+    // State-Key wird nur für interne Zwecke verwendet, nicht für Identifikation
     private var stateKey: String {
         switch state {
         case .active: return "A"
