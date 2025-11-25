@@ -5,6 +5,8 @@ struct ReorderTableView: View {
     let makeDisplayData: (AudioDevice) -> (NSImage, String, String, NSColor)
     let onReorder: ([AudioDevice]) -> Void
     var version: Int = 0
+    var isIgnored: ((AudioDevice) -> Bool)? = nil
+    var onIgnoreToggle: ((AudioDevice) -> Void)? = nil
 
     var body: some View {
         VStack(spacing: 6) {
@@ -23,7 +25,26 @@ struct ReorderTableView: View {
                             subtitle: subtitle,
                             statusColor: statusColor
                         )
-                        Spacer()
+                        if let isIgnoredCheck = isIgnored, let onIgnoreToggle = onIgnoreToggle {
+                            let deviceIsIgnored = isIgnoredCheck(device)
+                            Button {
+                                onIgnoreToggle(device)
+                            } label: {
+                                Image(systemName: deviceIsIgnored ? "eye.slash" : "eye")
+                                    .help(deviceIsIgnored ? "Ignored" : "Visible")
+                            }
+                            .buttonStyle(.borderless)
+                        } else {
+                            // Fallback zu altem Verhalten
+                            let isIgnored = PriorityStore.shared.loadIgnoredUIDs().contains(device.persistentUID)
+                            Button {
+                                AudioState.shared.ignoreDevice(device)
+                            } label: {
+                                Image(systemName: isIgnored ? "eye.slash" : "eye")
+                                    .help(isIgnored ? "Ignored" : "Visible")
+                            }
+                            .buttonStyle(.borderless)
+                        }
                     }
                     .padding(.vertical, 4)
                     .listRowBackground(Color.clear)

@@ -28,12 +28,15 @@ AudioDeviceControl is a lightweight macOS menu bar app that automatically select
 
 ## Overview
 
-macOS tends to change the default microphone or default speakers when new devices are connected — even if you don’t want it to. AudioDeviceControl fixes this for good:
+macOS tends to change the default microphone or default speakers when new devices are connected — even if you don't want it to. AudioDeviceControl fixes this for good with **Profiles**:
 
-- Sort your input and output devices by priority via drag & drop.
-- The app persistently saves your order.
-- As soon as the top-priority device is available, it’s activated automatically.
-- The app runs cleanly in the menu bar and updates live.
+- **Create profiles** for different scenarios (Home, Work, Gaming, etc.) with custom names, emoji icons, and color accents
+- **Customize device priorities** for each profile — sort your input and output devices by priority via drag & drop within each profile
+- **Switch profiles** with a single click to instantly apply different audio configurations
+- **Automatic activation** — as soon as the top-priority device in your active profile becomes available, it's activated automatically
+- The app runs cleanly in the menu bar and updates live
+
+> Screenshots of the new profile interface will be added soon.
 
 ---
 
@@ -51,6 +54,14 @@ macOS tends to change the default microphone or default speakers when new device
 - **No Dock icon**, menu bar–only app
 
 ---
+
+## New in version 1.1
+
+- **Profiles System**: Create multiple profiles with custom names, emoji icons, and color accents for different scenarios (Home, Work, Gaming, etc.)
+- **Per-Profile Device Priorities**: Each profile maintains its own separate input and output device priority lists
+- **Quick Profile Switching**: Switch between profiles with a single click to instantly apply different audio configurations
+- **Profile Editor**: Built-in editor for managing profile settings, including device priorities, names, icons, and colors
+- **Automatic Migration**: Existing device priorities are automatically migrated to a "Default" profile on first launch — nothing is lost
 
 ## New in version 1.0.3
 

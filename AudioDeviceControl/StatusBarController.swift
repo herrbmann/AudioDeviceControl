@@ -21,7 +21,7 @@ class StatusBarController {
 
         // Configure popover with SwiftUI content
         popover.behavior = .transient
-        popover.contentSize = NSSize(width: 520, height: 1050) // Erhöht für 4 Profile + Button
+        popover.contentSize = NSSize(width: 520, height: 800)
         popover.contentViewController = NSHostingController(rootView: MainProfileView())
 
         NotificationCenter.default.addObserver(self, selector: #selector(closePopover), name: .closePopoverRequested, object: nil)
@@ -46,6 +46,7 @@ class StatusBarController {
     private func showProfileMenu() {
         let menu = NSMenu()
         let profileManager = ProfileManager.shared
+        let audioState = AudioState.shared
         
         // Aktuelles Profil anzeigen
         if let activeProfile = profileManager.activeProfile {
@@ -55,13 +56,10 @@ class StatusBarController {
             menu.addItem(NSMenuItem.separator())
         }
         
-        // Profil-Wechsel Label
-        let switchLabel = NSMenuItem(title: "Profile wechseln:", action: nil, keyEquivalent: "")
-        switchLabel.isEnabled = false
-        menu.addItem(switchLabel)
+        // Profil-Wechsel
+        menu.addItem(NSMenuItem(title: "Profile wechseln:", action: nil, keyEquivalent: ""))
         menu.addItem(NSMenuItem.separator())
         
-        // Profile-Liste
         for profile in profileManager.profiles {
             let isActive = profileManager.activeProfile?.id == profile.id
             let menuItem = NSMenuItem(
@@ -69,25 +67,15 @@ class StatusBarController {
                 action: #selector(switchToProfile(_:)),
                 keyEquivalent: ""
             )
-            menuItem.target = self
             menuItem.representedObject = profile.id.uuidString
             menuItem.state = isActive ? .on : .off
             menu.addItem(menuItem)
         }
         
         menu.addItem(NSMenuItem.separator())
-        
-        // Einstellungen öffnen
-        let settingsItem = NSMenuItem(title: "Einstellungen öffnen", action: #selector(openSettings), keyEquivalent: "")
-        settingsItem.target = self
-        menu.addItem(settingsItem)
-        
+        menu.addItem(NSMenuItem(title: "Einstellungen öffnen", action: #selector(openSettings), keyEquivalent: ""))
         menu.addItem(NSMenuItem.separator())
-        
-        // Beenden
-        let quitItem = NSMenuItem(title: "Beenden", action: #selector(quitApp), keyEquivalent: "")
-        quitItem.target = self
-        menu.addItem(quitItem)
+        menu.addItem(NSMenuItem(title: "Beenden", action: #selector(quitApp), keyEquivalent: ""))
         
         if let button = statusItem.button {
             menu.popUp(positioning: nil, at: NSPoint(x: 0, y: button.bounds.height), in: button)
