@@ -14,6 +14,8 @@ final class AudioState: ObservableObject {
     @Published var defaultOutputID: AudioDeviceID = 0
     
     @Published var listVersion: Int = 0
+    
+    private let profileManager = ProfileManager.shared
 
     private init() {
         refresh()
@@ -29,7 +31,22 @@ final class AudioState: ObservableObject {
         defaultInputID = AudioDeviceManager.shared.getDefaultInputDevice()
         defaultOutputID = AudioDeviceManager.shared.getDefaultOutputDevice()
 
-        let ignored = Set(PriorityStore.shared.loadIgnoredUIDs())
+        // Priorität aus aktivem Profil laden, oder Fallback zu PriorityStore
+        let inputOrder: [String]
+        let outputOrder: [String]
+        
+        if let activeProfile = profileManager.activeProfile {
+            inputOrder = activeProfile.inputOrder
+            outputOrder = activeProfile.outputOrder
+        } else {
+            // Fallback zu altem System (für Migration)
+            inputOrder = PriorityStore.shared.loadInputOrder()
+            outputOrder = PriorityStore.shared.loadOutputOrder()
+        }
+        
+        // Ignored Devices sind jetzt global
+        let ignoredUIDs = PriorityStore.shared.loadIgnoredUIDs()
+        let ignored = Set(ignoredUIDs)
 
         var inputs: [AudioDevice] = []
         var outputs: [AudioDevice] = []
@@ -59,14 +76,10 @@ final class AudioState: ObservableObject {
         // Register currently visible devices (store metadata for offline rendering)
         DeviceRegistry.shared.registerDevices(inputs + outputs)
 
-        // Priorität aus Store laden
-        let inputOrder  = PriorityStore.shared.loadInputOrder()
-        let outputOrder = PriorityStore.shared.loadOutputOrder()
-
         // Build lists strictly following stored priority order.
         // Missing devices are shown as offline placeholders at their original positions.
-        let newInputDevices  = buildDeviceList(devices: inputs, storedUIDs: inputOrder, wantInput: true)
-        let newOutputDevices = buildDeviceList(devices: outputs, storedUIDs: outputOrder, wantInput: false)
+        let newInputDevices  = buildDeviceList(devices: inputs, storedUIDs: inputOrder, wantInput: true, ignored: ignored)
+        let newOutputDevices = buildDeviceList(devices: outputs, storedUIDs: outputOrder, wantInput: false, ignored: ignored)
 
         DispatchQueue.main.async {
             self.inputDevices  = newInputDevices
@@ -84,20 +97,35 @@ final class AudioState: ObservableObject {
 
     func updateInputOrder(_ devices: [AudioDevice]) {
         let uids = devices.map { $0.persistentUID }
-        PriorityStore.shared.saveInputOrder(uids)
+        // Update aktives Profil
+        if var activeProfile = profileManager.activeProfile {
+            activeProfile.inputOrder = uids
+            profileManager.updateProfile(activeProfile)
+        } else {
+            // Fallback zu altem System
+            PriorityStore.shared.saveInputOrder(uids)
+        }
         refresh()
     }
 
     func updateOutputOrder(_ devices: [AudioDevice]) {
         let uids = devices.map { $0.persistentUID }
-        PriorityStore.shared.saveOutputOrder(uids)
+        // Update aktives Profil
+        if var activeProfile = profileManager.activeProfile {
+            activeProfile.outputOrder = uids
+            profileManager.updateProfile(activeProfile)
+        } else {
+            // Fallback zu altem System
+            PriorityStore.shared.saveOutputOrder(uids)
+        }
         refresh()
     }
 
     // MARK: - Build prioritized list including offline placeholders (display only)
     private func buildDeviceList(devices: [AudioDevice],
                                  storedUIDs: [String],
-                                 wantInput: Bool) -> [AudioDevice] {
+                                 wantInput: Bool,
+                                 ignored: Set<String>) -> [AudioDevice] {
         var result: [AudioDevice] = []
 
         // Fast lookup for currently present devices by UID
@@ -142,7 +170,6 @@ final class AudioState: ObservableObject {
 
         // Filter out ignored devices unless showIgnored is true
         if !showIgnored {
-            let ignored = Set(PriorityStore.shared.loadIgnoredUIDs())
             result.removeAll { ignored.contains($0.persistentUID) }
         }
 
@@ -233,7 +260,7 @@ final class AudioState: ObservableObject {
         }
     }
 
-    // MARK: - Ignore handling
+    // MARK: - Ignore handling (global)
 
     func ignoreDevice(_ device: AudioDevice) {
         PriorityStore.shared.addIgnoredUID(device.persistentUID)
@@ -243,5 +270,28 @@ final class AudioState: ObservableObject {
     func unignoreAllDevices() {
         PriorityStore.shared.clearIgnoredUIDs()
         refresh()
+    }
+    
+    func unignoreDevice(_ device: AudioDevice) {
+        PriorityStore.shared.removeIgnoredUID(device.persistentUID)
+        refresh()
+    }
+    
+    // MARK: - Profile Management
+    
+    func loadProfile(_ profile: Profile) {
+        // Lädt Prioritäten aus Profil, aber wechselt nicht automatisch
+        refresh()
+    }
+    
+    func switchToProfile(_ profile: Profile) {
+        // Wechselt Profil und aktiviert Geräte automatisch
+        profileManager.setActiveProfile(profile)
+        refresh()
+        
+        // Warte kurz, dann aktiviere Geräte
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            self.applyAutoSelection()
+        }
     }
 }
