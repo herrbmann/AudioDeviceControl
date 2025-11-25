@@ -45,6 +45,8 @@ macOS tends to change the default microphone or default speakers when new device
 - **No Dock icon**, menu bar–only app
 
 Profile Editor
+
+
 <img width="812" height="1301" alt="SCR-20251125-lrsd" src="https://github.com/user-attachments/assets/5cba7da8-2312-4596-9131-549fe7faffca" />
 
 
