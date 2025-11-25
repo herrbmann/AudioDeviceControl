@@ -60,20 +60,6 @@ macOS tends to change the default microphone or default speakers when new device
 - **Profile Editor**: Built-in editor for managing profile settings, including device priorities, names, icons, and colors
 - **Automatic Migration**: Existing device priorities are automatically migrated to a "Default" profile on first launch — nothing is lost
 
-## New in version 1.0.3
-
-- **Update Checker**: Automatic update notifications with manual check option
-- **New Status Bar Icon**: Custom waveform icon for better visual distinction
-- **Bug Fixes**: Memory leak fixes and improved error handling
-- **UI Improvements**: Better text rendering and layout fixes
-
-## Previous versions
-
-- More reliable detection of input/output capabilities per device (CoreAudio-based)
-- More robust retrieval of default devices (input & output) and faster switching
-- Improved logs for easier debugging of rare CoreAudio errors
-- Clean singleton architecture for device management
-
 > Technical note: The app uses `CoreAudio` and `AudioObjectGetPropertyData`/`AudioObjectSetPropertyData` to efficiently query/set device lists, default devices, and stream capabilities.
 
 ---
