@@ -18,11 +18,6 @@ AudioDeviceControl is a lightweight macOS menu bar app that automatically select
 <img width="592" height="987" alt="SCR-20251125-lrtq" src="https://github.com/user-attachments/assets/9c67fb48-5235-424d-aa3a-bb3d95f73a5d" />
 
 
-- Profile Editor
-  
-<img width="812" height="1301" alt="SCR-20251125-lrsd" src="https://github.com/user-attachments/assets/adfa7ea9-28d3-486b-93ce-9734218bb088" />
----
-
 ## Overview
 
 macOS tends to change the default microphone or default speakers when new devices are connected — even if you don't want it to. AudioDeviceControl fixes this for good with **Profiles**:
@@ -33,7 +28,6 @@ macOS tends to change the default microphone or default speakers when new device
 - **Automatic activation** — as soon as the top-priority device in your active profile becomes available, it's activated automatically
 - The app runs cleanly in the menu bar and updates live
 
-> Screenshots of the new profile interface will be added soon.
 
 ---
 
@@ -49,6 +43,10 @@ macOS tends to change the default microphone or default speakers when new device
 - **Persistent storage** of priorities
 - **Clean, minimal macOS UI**
 - **No Dock icon**, menu bar–only app
+
+Profile Editor
+<img width="812" height="1301" alt="SCR-20251125-lrsd" src="https://github.com/user-attachments/assets/5cba7da8-2312-4596-9131-549fe7faffca" />
+
 
 ---
 
