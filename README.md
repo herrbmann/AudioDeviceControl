@@ -15,13 +15,15 @@ AudioDeviceControl is a lightweight macOS menu bar app that automatically select
 <!-- Replace these placeholders with your real images/links -->
 
 - Main Window (Prioritization & Status)
+<img width="592" height="987" alt="SCR-20251125-lrtq" src="https://github.com/user-attachments/assets/9c67fb48-5235-424d-aa3a-bb3d95f73a5d" />
 
-<img width="563" height="954" alt="image" src="https://github.com/user-attachments/assets/0c49771e-c78d-484f-aa8a-aa37205fdd8d" />
 
 
-- Menu Bar Status
 
-<img width="829" height="290" alt="image" src="https://github.com/user-attachments/assets/35fbf3f6-e3df-4b0e-9bb6-bed8aca9a44e" />
+- Profile Editor
+- <img width="812" height="1301" alt="SCR-20251125-lrsd" src="https://github.com/user-attachments/assets/adfa7ea9-28d3-486b-93ce-9734218bb088" />
+
+
 
 
 ---
