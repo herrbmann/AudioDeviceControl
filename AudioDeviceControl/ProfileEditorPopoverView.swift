@@ -52,10 +52,10 @@ struct ProfileEditorPopoverView: View {
             
             window.contentView = hostingView
             
-            // Stelle sicher, dass die App aktiviert wird
-            NSApp.setActivationPolicy(.regular)
-            NSApp.activate(ignoringOtherApps: true)
+            // Window collection behavior to prevent Dock appearance
+            window.collectionBehavior = [.moveToActiveSpace, .fullScreenAuxiliary]
             
+            // Activate window without changing activation policy (keeps menu bar only)
             window.makeKeyAndOrderFront(nil)
             window.orderFrontRegardless()
             

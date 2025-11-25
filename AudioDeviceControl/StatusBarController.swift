@@ -105,13 +105,9 @@ class StatusBarController {
 
     private func showPopover() {
         guard let button = statusItem.button else { return }
-        // Activate app first to ensure proper appearance
-        NSApp.setActivationPolicy(.regular)
+        // Show popover without changing activation policy (keeps menu bar only)
+        popover.show(relativeTo: button.bounds, of: button, preferredEdge: .maxY)
         NSApp.activate(ignoringOtherApps: true)
-        // Small delay to ensure activation is processed
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
-            self.popover.show(relativeTo: button.bounds, of: button, preferredEdge: .maxY)
-        }
     }
 
     @objc private func closePopover() {
