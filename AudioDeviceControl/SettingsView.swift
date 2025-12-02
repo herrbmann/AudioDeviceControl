@@ -98,6 +98,14 @@ struct SettingsView: View {
                     Divider()
                         .padding(.horizontal, 18)
                     
+                    // Ignore Devices Sektion
+                    VStack(alignment: .leading, spacing: 12) {
+                        IgnoreDevicesView()
+                    }
+                    
+                    Divider()
+                        .padding(.horizontal, 18)
+                    
                     // App Info
                     VStack(spacing: 4) {
                         if let url = URL(string: "mailto:audiocontrol@techbude.com") {

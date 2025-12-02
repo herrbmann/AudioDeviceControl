@@ -55,7 +55,61 @@ struct ProfileEditorView: View {
             
             ScrollView(.vertical, showsIndicators: true) {
                 VStack(spacing: 12) {
-                    // Profil-Name
+                    // Output-Geräte (zuerst)
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("Output-Geräte")
+                            .font(.headline)
+                            .padding(.horizontal, 12)
+                            .padding(.top, 10)
+                            .padding(.bottom, 2)
+                        
+                        if outputDevices.isEmpty {
+                            Text("Keine Output-Geräte gefunden")
+                                .foregroundColor(.secondary)
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 12)
+                        } else {
+                            DeviceReorderList(
+                                devices: $outputDevices,
+                                deviceType: "Output"
+                            )
+                            .padding(.horizontal, 12)
+                        }
+                    }
+                    .padding(.top, 8)
+                    
+                    Divider()
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 2)
+                    
+                    // Input-Geräte (zweiter)
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("Input-Geräte")
+                            .font(.headline)
+                            .padding(.horizontal, 12)
+                            .padding(.top, 10)
+                            .padding(.bottom, 2)
+                        
+                        if inputDevices.isEmpty {
+                            Text("Keine Input-Geräte gefunden")
+                                .foregroundColor(.secondary)
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 12)
+                        } else {
+                            DeviceReorderList(
+                                devices: $inputDevices,
+                                deviceType: "Input"
+                            )
+                            .padding(.horizontal, 12)
+                        }
+                    }
+                    .padding(.top, 8)
+                    
+                    Divider()
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 4)
+                    
+                    // Profil-Name und Einstellungen (dritter)
                     VStack(alignment: .leading, spacing: 6) {
                         Text("Profil-Name")
                             .font(.headline)
@@ -171,60 +225,6 @@ struct ProfileEditorView: View {
                     
                     Divider()
                         .padding(.horizontal, 12)
-                        .padding(.vertical, 2)
-                    
-                    // Output-Geräte
-                    VStack(alignment: .leading, spacing: 10) {
-                        Text("Output-Geräte")
-                            .font(.headline)
-                            .padding(.horizontal, 12)
-                            .padding(.top, 10)
-                            .padding(.bottom, 2)
-                        
-                        if outputDevices.isEmpty {
-                            Text("Keine Output-Geräte gefunden")
-                                .foregroundColor(.secondary)
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 12)
-                        } else {
-                            DeviceReorderList(
-                                devices: $outputDevices,
-                                deviceType: "Output"
-                            )
-                            .padding(.horizontal, 12)
-                        }
-                    }
-                    .padding(.top, 8)
-                    
-                    Divider()
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 2)
-                    
-                    // Input-Geräte
-                    VStack(alignment: .leading, spacing: 10) {
-                        Text("Input-Geräte")
-                            .font(.headline)
-                            .padding(.horizontal, 12)
-                            .padding(.top, 10)
-                            .padding(.bottom, 2)
-                        
-                        if inputDevices.isEmpty {
-                            Text("Keine Input-Geräte gefunden")
-                                .foregroundColor(.secondary)
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 12)
-                        } else {
-                            DeviceReorderList(
-                                devices: $inputDevices,
-                                deviceType: "Input"
-                            )
-                            .padding(.horizontal, 12)
-                        }
-                    }
-                    .padding(.top, 8)
-                    
-                    Divider()
-                        .padding(.horizontal, 12)
                         .padding(.vertical, 4)
                     
                     // Farbcode-Erklärung (ganz unten)
@@ -282,6 +282,9 @@ struct ProfileEditorView: View {
         let allInputs = loadAllInputDevices()
         let allOutputs = loadAllOutputDevices()
         
+        // Lade ignorierte Geräte
+        let ignoredUIDs = Set(PriorityStore.shared.loadIgnoredUIDs())
+        
         // Lade aktuelle Default-Geräte für korrekte State-Bestimmung
         let defaultInputID = AudioDeviceManager.shared.getDefaultInputDevice()
         let defaultOutputID = AudioDeviceManager.shared.getDefaultOutputDevice()
@@ -297,7 +300,12 @@ struct ProfileEditorView: View {
         
         // WICHTIG: Durchlaufe Prioritätsliste in exakter Reihenfolge
         // Jedes Gerät wird an seiner Position hinzugefügt, entweder als verbundenes Gerät oder als Offline-Placeholder
+        // ABER: Ignorierte Geräte werden übersprungen
         for uid in editingProfile.inputOrder {
+            // Überspringe ignorierte Geräte
+            if ignoredUIDs.contains(uid) {
+                continue
+            }
             if let device = inputDeviceMap[uid] {
                 // Gerät ist verbunden → verwende es (State wird automatisch korrekt gesetzt)
                 orderedInputs.append(device)
@@ -325,7 +333,12 @@ struct ProfileEditorView: View {
         }
         
         // Neue Geräte (nicht in Prioritätsliste) am Ende hinzufügen
+        // ABER: Ignorierte Geräte werden übersprungen
         for device in allInputs {
+            // Überspringe ignorierte Geräte
+            if ignoredUIDs.contains(device.persistentUID) {
+                continue
+            }
             if !orderedInputs.contains(where: { $0.persistentUID == device.persistentUID }) {
                 orderedInputs.append(device)
             }
@@ -339,7 +352,12 @@ struct ProfileEditorView: View {
         var orderedOutputs: [AudioDevice] = []
         
         // WICHTIG: Durchlaufe Prioritätsliste in exakter Reihenfolge
+        // ABER: Ignorierte Geräte werden übersprungen
         for uid in editingProfile.outputOrder {
+            // Überspringe ignorierte Geräte
+            if ignoredUIDs.contains(uid) {
+                continue
+            }
             if let device = outputDeviceMap[uid] {
                 // Gerät ist verbunden → verwende es
                 orderedOutputs.append(device)
@@ -367,7 +385,12 @@ struct ProfileEditorView: View {
         }
         
         // Neue Geräte (nicht in Prioritätsliste) am Ende hinzufügen
+        // ABER: Ignorierte Geräte werden übersprungen
         for device in allOutputs {
+            // Überspringe ignorierte Geräte
+            if ignoredUIDs.contains(device.persistentUID) {
+                continue
+            }
             if !orderedOutputs.contains(where: { $0.persistentUID == device.persistentUID }) {
                 orderedOutputs.append(device)
             }
@@ -382,6 +405,9 @@ struct ProfileEditorView: View {
         let ids = AudioDeviceManager.shared.getAllDeviceIDs()
         let defaultInputID = AudioDeviceManager.shared.getDefaultInputDevice()
         let defaultOutputID = AudioDeviceManager.shared.getDefaultOutputDevice()
+        
+        // Lade ignorierte Geräte
+        let ignoredUIDs = Set(PriorityStore.shared.loadIgnoredUIDs())
         
         var inputs: [AudioDevice] = []
         
@@ -399,6 +425,11 @@ struct ProfileEditorView: View {
                 defaultOutputID: defaultOutputID
             ) else { continue }
             
+            // Filtere ignorierte Geräte
+            if ignoredUIDs.contains(device.persistentUID) {
+                continue
+            }
+            
             inputs.append(device)
         }
         
@@ -412,6 +443,9 @@ struct ProfileEditorView: View {
         let ids = AudioDeviceManager.shared.getAllDeviceIDs()
         let defaultInputID = AudioDeviceManager.shared.getDefaultInputDevice()
         let defaultOutputID = AudioDeviceManager.shared.getDefaultOutputDevice()
+        
+        // Lade ignorierte Geräte
+        let ignoredUIDs = Set(PriorityStore.shared.loadIgnoredUIDs())
         
         var outputs: [AudioDevice] = []
         
@@ -428,6 +462,11 @@ struct ProfileEditorView: View {
                 defaultInputID: defaultInputID,
                 defaultOutputID: defaultOutputID
             ) else { continue }
+            
+            // Filtere ignorierte Geräte
+            if ignoredUIDs.contains(device.persistentUID) {
+                continue
+            }
             
             outputs.append(device)
         }

@@ -46,6 +46,30 @@ struct MainProfileView: View {
             .onReceive(NotificationCenter.default.publisher(for: .showSettingsRequested)) { _ in
                 showSettings = true
             }
+            .onReceive(NotificationCenter.default.publisher(for: .resetMainViewRequested)) { _ in
+                // Reset auf Main View beim Schließen des Popovers
+                showSettings = false
+                showProfileEditor = false
+                editingProfile = nil
+            }
+            .onChange(of: showProfileEditor) { _, isEditorVisible in
+                // Höhe anpassen, wenn Editor geöffnet/geschlossen wird
+                let height: CGFloat = isEditorVisible ? 800 : 600
+                NotificationCenter.default.post(
+                    name: .adjustPopoverSizeRequested,
+                    object: nil,
+                    userInfo: ["height": height]
+                )
+            }
+            .onChange(of: showSettings) { _, isSettingsVisible in
+                // Höhe anpassen, wenn Settings geöffnet/geschlossen werden
+                let height: CGFloat = 600
+                NotificationCenter.default.post(
+                    name: .adjustPopoverSizeRequested,
+                    object: nil,
+                    userInfo: ["height": height]
+                )
+            }
             
             // Content - nimmt verfügbaren Platz
             Group {

@@ -79,4 +79,19 @@ final class DeviceRegistry {
     func isKnown(_ device: AudioDevice) -> Bool {
         storedUIDs.contains(device.uid)
     }
+    
+    // MARK: - Entfernen
+    
+    /// Entfernt ein Gerät dauerhaft aus dem Registry (vergisst es)
+    func removeDevice(uid: String) {
+        // Entferne aus UID-Liste
+        var list = storedUIDs
+        list.removeAll { $0 == uid }
+        storedUIDs = list
+        
+        // Entferne Metadaten
+        var meta = loadMetaDict()
+        meta.removeValue(forKey: uid)
+        saveMetaDict(meta)
+    }
 }
