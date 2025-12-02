@@ -8,6 +8,7 @@ struct Profile: Identifiable, Codable, Equatable {
     var inputOrder: [String] // Device UIDs
     var outputOrder: [String] // Device UIDs
     var isDefault: Bool
+    var wifiSSID: String? // Optional: WiFi-SSID für automatischen Wechsel
     
     init(id: UUID = UUID(),
          name: String,
@@ -15,7 +16,8 @@ struct Profile: Identifiable, Codable, Equatable {
          color: String,
          inputOrder: [String] = [],
          outputOrder: [String] = [],
-         isDefault: Bool = false) {
+         isDefault: Bool = false,
+         wifiSSID: String? = nil) {
         self.id = id
         self.name = name
         self.icon = icon
@@ -23,6 +25,7 @@ struct Profile: Identifiable, Codable, Equatable {
         self.inputOrder = inputOrder
         self.outputOrder = outputOrder
         self.isDefault = isDefault
+        self.wifiSSID = wifiSSID
     }
 }
 

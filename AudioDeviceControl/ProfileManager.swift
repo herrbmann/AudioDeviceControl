@@ -150,6 +150,40 @@ final class ProfileManager: ObservableObject {
         print("✅ Ignored Devices Migration: Abgeschlossen - Ignored Devices sind jetzt global")
     }
     
+    // MARK: - Default Profile Management
+    
+    func setDefaultProfile(_ profile: Profile) {
+        guard let index = profiles.firstIndex(where: { $0.id == profile.id }) else {
+            return
+        }
+        
+        // Entferne isDefault von allen anderen Profilen
+        for i in profiles.indices {
+            profiles[i].isDefault = false
+        }
+        
+        // Setze dieses Profil als Default
+        profiles[index].isDefault = true
+        saveProfiles()
+        
+        // Aktualisiere activeProfile falls nötig
+        if activeProfile?.id == profile.id {
+            activeProfile = profiles[index]
+        }
+    }
+    
+    func getDefaultProfile() -> Profile? {
+        return profiles.first(where: { $0.isDefault })
+    }
+    
+    // MARK: - WiFi Helper
+    
+    func getAllKnownWiFiSSIDs() -> [String] {
+        let ssids = profiles.compactMap { $0.wifiSSID }
+        // Entferne Duplikate und sortiere
+        return Array(Set(ssids)).sorted()
+    }
+    
     // MARK: - Helper
     
     func getProfile(by id: UUID) -> Profile? {

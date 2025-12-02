@@ -5,30 +5,30 @@ struct DeviceReorderList: View {
     let deviceType: String
     
     var body: some View {
-        VStack(spacing: 10) {
+        VStack(spacing: 6) {
             HStack(spacing: 6) {
                 Image(systemName: "arrow.up.arrow.down.circle")
-                    .font(.system(size: 12, weight: .semibold))
+                    .font(.system(size: 11, weight: .semibold))
                     .foregroundColor(.secondary)
                 Text("Zum Neuordnen ziehen")
                     .font(.caption2)
                     .foregroundColor(.secondary)
                 Spacer()
             }
-            .padding(.horizontal, 12)
-            .padding(.top, 8)
-            .padding(.bottom, 4)
+            .padding(.horizontal, 10)
+            .padding(.top, 6)
+            .padding(.bottom, 2)
             
             if devices.isEmpty {
                 Text("Keine Geräte verfügbar")
                     .foregroundColor(.secondary)
-                    .padding(.vertical, 20)
+                    .padding(.vertical, 12)
             } else {
                 List {
                     ForEach(devices, id: \.identityKey) { device in
                         DeviceRowView(device: device)
                         .listRowBackground(Color.clear)
-                        .listRowInsets(EdgeInsets(top: 4, leading: 8, bottom: 4, trailing: 8))
+                        .listRowInsets(EdgeInsets(top: 2, leading: 6, bottom: 2, trailing: 6))
                     }
                     .onMove { source, destination in
                         devices.move(fromOffsets: source, toOffset: destination)
@@ -38,12 +38,12 @@ struct DeviceReorderList: View {
                 .scrollContentBackground(.hidden)
                 .scrollIndicators(.hidden)
                 .scrollDisabled(true)
-                .frame(height: CGFloat(devices.count) * 60 + 10)
+                .frame(height: CGFloat(devices.count) * 50 + 6)
             }
         }
         .background(Color(NSColor.controlBackgroundColor))
-        .cornerRadius(8)
-        .padding(2)
+        .cornerRadius(6)
+        .padding(1)
     }
 }
 
@@ -62,7 +62,7 @@ struct DeviceRowView: View {
     }
     
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 10) {
             DeviceTableCellView(
                 icon: device.iconNSImage,
                 name: device.name,
@@ -72,10 +72,10 @@ struct DeviceRowView: View {
             
             Spacer()
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 10)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 6)
         .background(Color(NSColor.textBackgroundColor))
-        .cornerRadius(6)
+        .cornerRadius(5)
     }
 }
 

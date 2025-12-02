@@ -21,7 +21,7 @@ class StatusBarController {
 
         // Configure popover with SwiftUI content
         popover.behavior = .transient
-        popover.contentSize = NSSize(width: 520, height: 800)
+        popover.contentSize = NSSize(width: 520, height: 600)
         popover.contentViewController = NSHostingController(rootView: MainProfileView())
 
         NotificationCenter.default.addObserver(self, selector: #selector(closePopover), name: .closePopoverRequested, object: nil)
@@ -67,15 +67,20 @@ class StatusBarController {
                 action: #selector(switchToProfile(_:)),
                 keyEquivalent: ""
             )
+            menuItem.target = self
             menuItem.representedObject = profile.id.uuidString
             menuItem.state = isActive ? .on : .off
             menu.addItem(menuItem)
         }
         
         menu.addItem(NSMenuItem.separator())
-        menu.addItem(NSMenuItem(title: "Einstellungen öffnen", action: #selector(openSettings), keyEquivalent: ""))
+        let settingsItem = NSMenuItem(title: "Einstellungen öffnen", action: #selector(openSettings), keyEquivalent: "")
+        settingsItem.target = self
+        menu.addItem(settingsItem)
         menu.addItem(NSMenuItem.separator())
-        menu.addItem(NSMenuItem(title: "Beenden", action: #selector(quitApp), keyEquivalent: ""))
+        let quitItem = NSMenuItem(title: "Beenden", action: #selector(quitApp), keyEquivalent: "")
+        quitItem.target = self
+        menu.addItem(quitItem)
         
         if let button = statusItem.button {
             menu.popUp(positioning: nil, at: NSPoint(x: 0, y: button.bounds.height), in: button)
@@ -97,6 +102,8 @@ class StatusBarController {
         if !popover.isShown {
             showPopover()
         }
+        // Benachrichtige MainProfileView, dass Settings angezeigt werden sollen
+        NotificationCenter.default.post(name: .showSettingsRequested, object: nil)
     }
     
     @objc private func quitApp() {
@@ -123,4 +130,5 @@ class StatusBarController {
 
 extension Notification.Name {
     static let closePopoverRequested = Notification.Name("closePopoverRequested")
+    static let showSettingsRequested = Notification.Name("showSettingsRequested")
 }
