@@ -7,15 +7,11 @@
 
 AudioDeviceControl is a lightweight macOS menu bar app that automatically selects your preferred audio input and output device — based on a priority list you define. No more AirPods chaos, wrong microphones, or constant switching.
 
-
----
-
 ## Screenshots
 
-<!-- Replace these placeholders with your real images/links -->
-
 - Main Window (Prioritization & Status)
-<img width="592" height="987" alt="SCR-20251125-lrtq" src="https://github.com/user-attachments/assets/9c67fb48-5235-424d-aa3a-bb3d95f73a5d" />
+<img width="592" height="672" alt="SCR-20251204-qbyd" src="https://github.com/user-attachments/assets/fac85bea-3029-41be-bdeb-036208682484" />
+
 
 
 ## Overview
@@ -47,20 +43,40 @@ macOS tends to change the default microphone or default speakers when new device
 Profile Editor
 
 
-<img width="812" height="1301" alt="SCR-20251125-lrsd" src="https://github.com/user-attachments/assets/5cba7da8-2312-4596-9131-549fe7faffca" />
+<img width="592" height="872" alt="SCR-20251204-qccd" src="https://github.com/user-attachments/assets/28791d1b-6e5c-4207-a293-e94c93aa38f5" />
+
+<img width="592" height="872" alt="SCR-20251204-qcnt" src="https://github.com/user-attachments/assets/4e75032c-42e1-4c9b-92ee-c4d357b1c3d5" />
+
+
 
 
 ---
 
-## New in version 1.1
+## New in version 1.3
 
-- **Profiles System**: Create multiple profiles with custom names, emoji icons, and color accents for different scenarios (Home, Work, Gaming, etc.)
-- **Per-Profile Device Priorities**: Each profile maintains its own separate input and output device priority lists
-- **Quick Profile Switching**: Switch between profiles with a single click to instantly apply different audio configurations
-- **Profile Editor**: Built-in editor for managing profile settings, including device priorities, names, icons, and colors
-- **Automatic Migration**: Existing device priorities are automatically migrated to a "Default" profile on first launch — nothing is lost
+### Automatic profile switching via Wi-Fi
+Profiles can now be assigned to a Wi-Fi network. The app automatically switches to the matching profile as soon as the connected Wi-Fi network changes.
 
-> Technical note: The app uses `CoreAudio` and `AudioObjectGetPropertyData`/`AudioObjectSetPropertyData` to efficiently query/set device lists, default devices, and stream capabilities.
+### Sound feedback
+Optional audio feedback on profile switches. Configurable volume in the settings.
+
+### Notifications
+Push notifications inform you about automatic profile switches based on Wi-Fi connections.
+
+### Device overview in profile cards
+Each profile card now directly shows the active input and output devices – so you can see at a glance which hardware is active.
+
+### Per-profile ignore list
+Devices can now be ignored on a per-profile basis. Each profile manages its own list of ignored devices for maximum flexibility.
+
+### Global device management
+Devices can be completely removed from the app’s memory. They will reappear when reconnected, but remain hidden by default.
+
+## Improvements
+
+- Dark mode optimizations for better readability
+- Centered volume control in the sound feedback section
+- Improved UI consistency
 
 ---
 
@@ -74,12 +90,10 @@ Profile Editor
 ---
 
 ## Installation:
-go to [releases](https://github.com/herrbmann/AudioDeviceControl/releases) and download the latest dmg.
+Go to [releases](https://github.com/herrbmann/AudioDeviceControl/releases) and download the latest dmg.
 
 ## Please note:
 This project started as a small hobby experiment—basically some vibe coding—because I couldn’t find any existing solution that worked the way I wanted. Since I’m not interested in paying €99 for an Apple developer certificate, the app isn’t code-signed. Because of that, macOS will block it the first time you try to open it.
 
 If your Mac blocks the app, you can manually allow it:
 System Settings → Privacy & Security → “Open Anyway
-
-
