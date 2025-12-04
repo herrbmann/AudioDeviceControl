@@ -25,7 +25,6 @@ class StatusBarController {
         popover.contentViewController = NSHostingController(rootView: MainProfileView())
 
         NotificationCenter.default.addObserver(self, selector: #selector(closePopover), name: .closePopoverRequested, object: nil)
-        NotificationCenter.default.addObserver(self, selector: #selector(adjustPopoverSize), name: .adjustPopoverSizeRequested, object: nil)
     }
 
     @objc private func togglePopover() {
@@ -121,21 +120,6 @@ class StatusBarController {
     @objc private func closePopover() {
         if popover.isShown {
             popover.performClose(nil)
-            // Reset View-State beim Schließen, damit beim nächsten Öffnen Main View angezeigt wird
-            NotificationCenter.default.post(name: .resetMainViewRequested, object: nil)
-        }
-    }
-    
-    @objc private func adjustPopoverSize(_ notification: Notification) {
-        guard let height = notification.userInfo?["height"] as? CGFloat else { return }
-        popover.contentSize = NSSize(width: 520, height: height)
-        
-        // Wenn Popover bereits geöffnet ist, aktualisiere die Größe
-        if popover.isShown {
-            // Popover neu positionieren, um Größenänderung zu übernehmen
-            if let button = statusItem.button {
-                popover.show(relativeTo: button.bounds, of: button, preferredEdge: .maxY)
-            }
         }
     }
     
@@ -147,6 +131,5 @@ class StatusBarController {
 extension Notification.Name {
     static let closePopoverRequested = Notification.Name("closePopoverRequested")
     static let showSettingsRequested = Notification.Name("showSettingsRequested")
-    static let adjustPopoverSizeRequested = Notification.Name("adjustPopoverSizeRequested")
-    static let resetMainViewRequested = Notification.Name("resetMainViewRequested")
+    static let saveProfileRequested = Notification.Name("saveProfileRequested")
 }

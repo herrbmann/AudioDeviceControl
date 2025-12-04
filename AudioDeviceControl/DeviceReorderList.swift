@@ -55,9 +55,9 @@ struct DeviceRowView: View {
         case .offline:
             return "Offline"
         case .active:
-            return device.isInput ? "Active Input" : "Active Output"
+            return device.isInput ? "Aktive Eingabe" : "Aktive Ausgabe"
         case .connected:
-            return "Connected but not active"
+            return "Verbunden, aber nicht aktiv"
         }
     }
     

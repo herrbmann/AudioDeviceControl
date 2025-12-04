@@ -81,17 +81,8 @@ final class WiFiWatcher {
                 AudioState.shared.switchToProfile(matchingProfile)
             }
         } else {
-            print("📡 WiFiWatcher: Kein Profil für SSID '\(ssid)' gefunden - wechsle zu Default-Profil")
-            // Bei unbekanntem WiFi zum Default-Profil wechseln
-            if let defaultProfile = profileManager.getDefaultProfile() {
-                if profileManager.activeProfile?.id != defaultProfile.id {
-                    print("📡 WiFiWatcher: Wechsle zu Default-Profil: \(defaultProfile.name)")
-                    profileManager.setActiveProfile(defaultProfile)
-                    AudioState.shared.switchToProfile(defaultProfile)
-                }
-            } else {
-                print("📡 WiFiWatcher: Kein Default-Profil gefunden")
-            }
+            print("📡 WiFiWatcher: Kein Profil für SSID '\(ssid)' gefunden - aktuelles Profil bleibt aktiv")
+            // Bei unbekanntem WiFi kein Wechsel - aktuelles Profil bleibt aktiv
         }
     }
 }

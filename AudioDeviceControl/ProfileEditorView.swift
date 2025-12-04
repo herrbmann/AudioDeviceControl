@@ -18,53 +18,217 @@ struct ProfileEditorView: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            // Header
-            HStack {
-                Button {
-                    isPresented = false
-                } label: {
-                    HStack(spacing: 4) {
-                        Image(systemName: "chevron.left")
-                        Text("Zurück")
-                    }
-                }
-                .buttonStyle(.bordered)
-                
-                Spacer()
-                
+            // Header - nur Titel
+            VStack(spacing: 0) {
                 Text("Profil bearbeiten")
                     .font(.title3)
                     .bold()
+                    .padding(.top, 12)
+                    .padding(.bottom, 8)
                 
-                Spacer()
-                
-                Button("Abbrechen") {
-                    isPresented = false
-                }
-                .buttonStyle(.bordered)
-                Button("Speichern") {
-                    saveProfile()
-                    isPresented = false
-                }
-                .buttonStyle(.borderedProminent)
+                Divider()
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
-            
-            Divider()
             
             ScrollView(.vertical, showsIndicators: true) {
                 VStack(spacing: 12) {
-                    // Output-Geräte (zuerst)
-                    VStack(alignment: .leading, spacing: 10) {
-                        Text("Output-Geräte")
+                    // Profil-Einstellungen - ganz oben
+                    VStack(alignment: .leading, spacing: 20) {
+                        // Profil-Name
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text("Profil-Name")
+                                .font(.headline)
+                            TextField("Profil-Name", text: $editingProfile.name)
+                                .textFieldStyle(.roundedBorder)
+                        }
+                        
+                        // Emoji-Auswahl (kompakt) - zentriert
+                        VStack(alignment: .center, spacing: 6) {
+                            Text("Icon")
+                                .font(.headline)
+                                .foregroundColor(.primary)
+                            HStack {
+                                Spacer()
+                                HStack(spacing: 6) {
+                                    ForEach(ProfileEmojiPreset.emojis, id: \.self) { emoji in
+                                        Button {
+                                            editingProfile.icon = emoji
+                                        } label: {
+                                            Text(emoji)
+                                                .font(.system(size: 24))
+                                                .frame(width: 36, height: 36)
+                                                .background(
+                                                    editingProfile.icon == emoji
+                                                        ? Color.accentColor.opacity(0.2)
+                                                        : Color.clear
+                                                )
+                                                .cornerRadius(6)
+                                                .overlay(
+                                                    RoundedRectangle(cornerRadius: 6)
+                                                        .stroke(
+                                                            editingProfile.icon == emoji
+                                                                ? Color.accentColor
+                                                                : Color.clear,
+                                                            lineWidth: 2
+                                                        )
+                                                )
+                                        }
+                                        .buttonStyle(.plain)
+                                    }
+                                }
+                                Spacer()
+                            }
+                        }
+                        
+                        // Separator zwischen Icon und Farbe
+                        Divider()
+                            .padding(.vertical, 8)
+                        
+                        // Farb-Auswahl (kompakt) - zentriert
+                        VStack(alignment: .center, spacing: 6) {
+                            Text("Farbe")
+                                .font(.headline)
+                                .foregroundColor(.primary)
+                            HStack {
+                                Spacer()
+                                HStack(spacing: 6) {
+                                    ForEach(ProfileColorPreset.colors, id: \.hex) { colorPreset in
+                                        Button {
+                                            editingProfile.color = colorPreset.hex
+                                        } label: {
+                                            Circle()
+                                                .fill(Color(hex: colorPreset.hex))
+                                                .frame(width: 28, height: 28)
+                                                .overlay(
+                                                    Circle()
+                                                        .stroke(
+                                                            editingProfile.color == colorPreset.hex
+                                                                ? Color.primary
+                                                                : Color.clear,
+                                                            lineWidth: 2.5
+                                                        )
+                                                )
+                                                .overlay(
+                                                    editingProfile.color == colorPreset.hex
+                                                        ? Image(systemName: "checkmark")
+                                                            .foregroundColor(.white)
+                                                            .font(.system(size: 11, weight: .bold))
+                                                        : nil
+                                                )
+                                        }
+                                        .buttonStyle(.plain)
+                                    }
+                                }
+                                Spacer()
+                            }
+                        }
+                        
+                        // Separator zwischen Farbe und WiFi
+                        Divider()
+                            .padding(.vertical, 8)
+                        
+                        // WiFi-Netzwerk (optional) - zentriert
+                        VStack(alignment: .center, spacing: 6) {
+                            Text("WiFi-Netzwerk (optional)")
+                                .font(.headline)
+                            
+                            WiFiPickerView(
+                                selectedSSID: Binding(
+                                    get: { editingProfile.wifiSSID },
+                                    set: { editingProfile.wifiSSID = $0 }
+                                ),
+                                knownSSIDs: profileManager.getAllKnownWiFiSSIDs()
+                            )
+                        }
+                        
+                        // Separator zwischen WiFi und Standardprofil
+                        Divider()
+                            .padding(.vertical, 8)
+                        
+                        // Default-Profil Checkbox - zentriert
+                        VStack(alignment: .center, spacing: 6) {
+                            Text("Als Standard-Profil verwenden")
+                                .font(.headline)
+                                .foregroundColor(.primary)
+                            
+                            HStack {
+                                Spacer()
+                                VStack(alignment: .center, spacing: 4) {
+                                    Toggle("", isOn: Binding(
+                                        get: { editingProfile.isDefault },
+                                        set: { newValue in
+                                            editingProfile.isDefault = newValue
+                                            if newValue {
+                                                // Wenn dieses Profil als Default gesetzt wird, entferne Default von anderen
+                                                profileManager.setDefaultProfile(editingProfile)
+                                            }
+                                        }
+                                    ))
+                                    .toggleStyle(.checkbox)
+                                    
+                                    Text("Wird beim App-Start oder beim Löschen des aktiven Profils verwendet")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                                Spacer()
+                            }
+                        }
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.top, 8)
+                    
+                    Divider()
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 2)
+                    
+                    // Device Priorities Überschrift und Legende
+                    VStack(alignment: .center, spacing: 8) {
+                        Text("Geräte-Prioritäten")
                             .font(.headline)
-                            .padding(.horizontal, 12)
-                            .padding(.top, 10)
-                            .padding(.bottom, 2)
+                        
+                        // Farbcode-Erklärung
+                        VStack(spacing: 2) {
+                            HStack(spacing: 6) {
+                                Text("●")
+                                    .foregroundColor(.green)
+                                Text("Grün = Aktives Gerät")
+                            }
+                            HStack(spacing: 6) {
+                                Text("●")
+                                    .foregroundColor(.blue)
+                                Text("Blau = Verbunden, aber nicht aktiv")
+                            }
+                            HStack(spacing: 6) {
+                                Text("●")
+                                    .foregroundColor(.gray)
+                                Text("Grau = Offline oder nicht verfügbar")
+                            }
+                        }
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.top, 8)
+                    .padding(.bottom, 4)
+                    
+                    // Separator zwischen Legende und Output-Geräte
+                    Divider()
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 2)
+                    
+                    // Output-Geräte - darunter
+                    VStack(alignment: .leading, spacing: 10) {
+                        HStack {
+                            Spacer()
+                            Text("Ausgabe-Geräte")
+                                .font(.headline)
+                            Spacer()
+                        }
+                        .padding(.horizontal, 12)
+                        .padding(.top, 10)
+                        .padding(.bottom, 2)
                         
                         if outputDevices.isEmpty {
-                            Text("Keine Output-Geräte gefunden")
+                            Text("Keine Ausgabe-Geräte gefunden")
                                 .foregroundColor(.secondary)
                                 .padding(.horizontal, 12)
                                 .padding(.vertical, 12)
@@ -82,16 +246,20 @@ struct ProfileEditorView: View {
                         .padding(.horizontal, 12)
                         .padding(.vertical, 2)
                     
-                    // Input-Geräte (zweiter)
+                    // Input-Geräte - darunter
                     VStack(alignment: .leading, spacing: 10) {
-                        Text("Input-Geräte")
-                            .font(.headline)
-                            .padding(.horizontal, 12)
-                            .padding(.top, 10)
-                            .padding(.bottom, 2)
+                        HStack {
+                            Spacer()
+                            Text("Eingabe-Geräte")
+                                .font(.headline)
+                            Spacer()
+                        }
+                        .padding(.horizontal, 12)
+                        .padding(.top, 10)
+                        .padding(.bottom, 2)
                         
                         if inputDevices.isEmpty {
-                            Text("Keine Input-Geräte gefunden")
+                            Text("Keine Eingabe-Geräte gefunden")
                                 .foregroundColor(.secondary)
                                 .padding(.horizontal, 12)
                                 .padding(.vertical, 12)
@@ -105,154 +273,6 @@ struct ProfileEditorView: View {
                     }
                     .padding(.top, 8)
                     
-                    Divider()
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 4)
-                    
-                    // Profil-Name und Einstellungen (dritter)
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text("Profil-Name")
-                            .font(.headline)
-                        TextField("Profil-Name", text: $editingProfile.name)
-                            .textFieldStyle(.roundedBorder)
-                    }
-                    .padding(.horizontal, 12)
-                    .padding(.top, 8)
-                    
-                    // Emoji-Auswahl (kompakt)
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text("Icon")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                        HStack(spacing: 6) {
-                            ForEach(ProfileEmojiPreset.emojis, id: \.self) { emoji in
-                                Button {
-                                    editingProfile.icon = emoji
-                                } label: {
-                                    Text(emoji)
-                                        .font(.system(size: 24))
-                                        .frame(width: 36, height: 36)
-                                        .background(
-                                            editingProfile.icon == emoji
-                                                ? Color.accentColor.opacity(0.2)
-                                                : Color.clear
-                                        )
-                                        .cornerRadius(6)
-                                        .overlay(
-                                            RoundedRectangle(cornerRadius: 6)
-                                                .stroke(
-                                                    editingProfile.icon == emoji
-                                                        ? Color.accentColor
-                                                        : Color.clear,
-                                                    lineWidth: 2
-                                                )
-                                        )
-                                }
-                                .buttonStyle(.plain)
-                            }
-                        }
-                    }
-                    .padding(.horizontal, 12)
-                    
-                    // Farb-Auswahl (kompakt)
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text("Farbe")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                        HStack(spacing: 6) {
-                            ForEach(ProfileColorPreset.colors, id: \.hex) { colorPreset in
-                                Button {
-                                    editingProfile.color = colorPreset.hex
-                                } label: {
-                                    Circle()
-                                        .fill(Color(hex: colorPreset.hex))
-                                        .frame(width: 28, height: 28)
-                                        .overlay(
-                                            Circle()
-                                                .stroke(
-                                                    editingProfile.color == colorPreset.hex
-                                                        ? Color.primary
-                                                        : Color.clear,
-                                                    lineWidth: 2.5
-                                                )
-                                        )
-                                        .overlay(
-                                            editingProfile.color == colorPreset.hex
-                                                ? Image(systemName: "checkmark")
-                                                    .foregroundColor(.white)
-                                                    .font(.system(size: 11, weight: .bold))
-                                                : nil
-                                        )
-                                }
-                                .buttonStyle(.plain)
-                            }
-                        }
-                    }
-                    .padding(.horizontal, 12)
-                    
-                    // Default-Profil Checkbox
-                    VStack(alignment: .leading, spacing: 6) {
-                        Toggle("Als Standard-Profil verwenden", isOn: Binding(
-                            get: { editingProfile.isDefault },
-                            set: { newValue in
-                                editingProfile.isDefault = newValue
-                                if newValue {
-                                    // Wenn dieses Profil als Default gesetzt wird, entferne Default von anderen
-                                    profileManager.setDefaultProfile(editingProfile)
-                                }
-                            }
-                        ))
-                        .toggleStyle(.checkbox)
-                    }
-                    .padding(.horizontal, 12)
-                    .padding(.top, 8)
-                    
-                    // WiFi-Netzwerk (optional)
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text("WiFi-Netzwerk (optional)")
-                            .font(.headline)
-                        
-                        WiFiPickerView(
-                            selectedSSID: Binding(
-                                get: { editingProfile.wifiSSID },
-                                set: { editingProfile.wifiSSID = $0 }
-                            ),
-                            knownSSIDs: profileManager.getAllKnownWiFiSSIDs()
-                        )
-                    }
-                    .padding(.horizontal, 12)
-                    .padding(.top, 8)
-                    
-                    Divider()
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 4)
-                    
-                    // Farbcode-Erklärung (ganz unten)
-                    VStack(alignment: .leading, spacing: 4) {
-                        VStack(spacing: 2) {
-                            HStack(spacing: 6) {
-                                Text("●")
-                                    .foregroundColor(.green)
-                                Text("Green = Active device")
-                            }
-                            HStack(spacing: 6) {
-                                Text("●")
-                                    .foregroundColor(.blue)
-                                Text("Blue = Connected but not active")
-                            }
-                            HStack(spacing: 6) {
-                                Text("●")
-                                    .foregroundColor(.gray)
-                                Text("Gray = Offline or not available")
-                            }
-                        }
-                        .font(.callout)
-                        .foregroundColor(.secondary)
-                    }
-                    .padding(.horizontal, 12)
-                    .padding(.top, 4)
-                    .padding(.bottom, 12)
-                    
                 }
             }
         }
@@ -264,6 +284,9 @@ struct ProfileEditorView: View {
                 print("📋 ProfileEditor: Refreshing device lists after delay")
                 refreshDeviceLists()
             }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .saveProfileRequested)) { _ in
+            saveProfile()
         }
         .onChange(of: audioState.listVersion) { _, _ in
             refreshDeviceLists()
@@ -282,9 +305,6 @@ struct ProfileEditorView: View {
         let allInputs = loadAllInputDevices()
         let allOutputs = loadAllOutputDevices()
         
-        // Lade ignorierte Geräte
-        let ignoredUIDs = Set(PriorityStore.shared.loadIgnoredUIDs())
-        
         // Lade aktuelle Default-Geräte für korrekte State-Bestimmung
         let defaultInputID = AudioDeviceManager.shared.getDefaultInputDevice()
         let defaultOutputID = AudioDeviceManager.shared.getDefaultOutputDevice()
@@ -300,12 +320,7 @@ struct ProfileEditorView: View {
         
         // WICHTIG: Durchlaufe Prioritätsliste in exakter Reihenfolge
         // Jedes Gerät wird an seiner Position hinzugefügt, entweder als verbundenes Gerät oder als Offline-Placeholder
-        // ABER: Ignorierte Geräte werden übersprungen
         for uid in editingProfile.inputOrder {
-            // Überspringe ignorierte Geräte
-            if ignoredUIDs.contains(uid) {
-                continue
-            }
             if let device = inputDeviceMap[uid] {
                 // Gerät ist verbunden → verwende es (State wird automatisch korrekt gesetzt)
                 orderedInputs.append(device)
@@ -333,12 +348,7 @@ struct ProfileEditorView: View {
         }
         
         // Neue Geräte (nicht in Prioritätsliste) am Ende hinzufügen
-        // ABER: Ignorierte Geräte werden übersprungen
         for device in allInputs {
-            // Überspringe ignorierte Geräte
-            if ignoredUIDs.contains(device.persistentUID) {
-                continue
-            }
             if !orderedInputs.contains(where: { $0.persistentUID == device.persistentUID }) {
                 orderedInputs.append(device)
             }
@@ -352,12 +362,7 @@ struct ProfileEditorView: View {
         var orderedOutputs: [AudioDevice] = []
         
         // WICHTIG: Durchlaufe Prioritätsliste in exakter Reihenfolge
-        // ABER: Ignorierte Geräte werden übersprungen
         for uid in editingProfile.outputOrder {
-            // Überspringe ignorierte Geräte
-            if ignoredUIDs.contains(uid) {
-                continue
-            }
             if let device = outputDeviceMap[uid] {
                 // Gerät ist verbunden → verwende es
                 orderedOutputs.append(device)
@@ -385,12 +390,7 @@ struct ProfileEditorView: View {
         }
         
         // Neue Geräte (nicht in Prioritätsliste) am Ende hinzufügen
-        // ABER: Ignorierte Geräte werden übersprungen
         for device in allOutputs {
-            // Überspringe ignorierte Geräte
-            if ignoredUIDs.contains(device.persistentUID) {
-                continue
-            }
             if !orderedOutputs.contains(where: { $0.persistentUID == device.persistentUID }) {
                 orderedOutputs.append(device)
             }
@@ -405,9 +405,6 @@ struct ProfileEditorView: View {
         let ids = AudioDeviceManager.shared.getAllDeviceIDs()
         let defaultInputID = AudioDeviceManager.shared.getDefaultInputDevice()
         let defaultOutputID = AudioDeviceManager.shared.getDefaultOutputDevice()
-        
-        // Lade ignorierte Geräte
-        let ignoredUIDs = Set(PriorityStore.shared.loadIgnoredUIDs())
         
         var inputs: [AudioDevice] = []
         
@@ -425,11 +422,6 @@ struct ProfileEditorView: View {
                 defaultOutputID: defaultOutputID
             ) else { continue }
             
-            // Filtere ignorierte Geräte
-            if ignoredUIDs.contains(device.persistentUID) {
-                continue
-            }
-            
             inputs.append(device)
         }
         
@@ -443,9 +435,6 @@ struct ProfileEditorView: View {
         let ids = AudioDeviceManager.shared.getAllDeviceIDs()
         let defaultInputID = AudioDeviceManager.shared.getDefaultInputDevice()
         let defaultOutputID = AudioDeviceManager.shared.getDefaultOutputDevice()
-        
-        // Lade ignorierte Geräte
-        let ignoredUIDs = Set(PriorityStore.shared.loadIgnoredUIDs())
         
         var outputs: [AudioDevice] = []
         
@@ -462,11 +451,6 @@ struct ProfileEditorView: View {
                 defaultInputID: defaultInputID,
                 defaultOutputID: defaultOutputID
             ) else { continue }
-            
-            // Filtere ignorierte Geräte
-            if ignoredUIDs.contains(device.persistentUID) {
-                continue
-            }
             
             outputs.append(device)
         }
@@ -493,7 +477,7 @@ struct ProfileEditorView: View {
             }
     }
     
-    private func saveProfile() {
+    func saveProfile() {
         // Speichere Prioritäten
         editingProfile.inputOrder = inputDevices.map { $0.persistentUID }
         editingProfile.outputOrder = outputDevices.map { $0.persistentUID }
@@ -515,6 +499,9 @@ struct WiFiPickerView: View {
     let knownSSIDs: [String]
     @State private var refreshID = UUID()
     @State private var timer: Timer?
+    @State private var savedSSIDs: [String] = []
+    @State private var isLoadingSSIDs: Bool = false
+    @State private var ssidLoadError: String?
     
     private var currentSSID: String? {
         WiFiManager.shared.getCurrentSSID()
@@ -524,9 +511,9 @@ struct WiFiPickerView: View {
         var ssids: [String?] = [nil] // "Kein WiFi" Option
         let current = currentSSID
         
-        print("📡 WiFiPickerView: currentSSID = \(current ?? "nil"), knownSSIDs = \(knownSSIDs)")
+        print("📡 WiFiPickerView: currentSSID = \(current ?? "nil"), knownSSIDs = \(knownSSIDs.count), savedSSIDs = \(savedSSIDs.count)")
         
-        // Aktuelles WiFi IMMER hinzufügen (auch wenn noch nicht gespeichert)
+        // 1. Aktuelles WiFi IMMER zuerst hinzufügen (auch wenn noch nicht gespeichert)
         if let current = current {
             ssids.append(current)
             print("📡 WiFiPickerView: Aktuelles WiFi hinzugefügt: \(current)")
@@ -534,10 +521,25 @@ struct WiFiPickerView: View {
             print("📡 WiFiPickerView: Kein aktuelles WiFi gefunden")
         }
         
-        // Alle gemerkten WiFi-Netzwerke hinzufügen (ohne Duplikate)
+        // 2. Alle gespeicherten macOS WLANs hinzufügen (alphabetisch sortiert, ohne Duplikate)
+        var addedSSIDs = Set<String>()
+        if let current = current {
+            addedSSIDs.insert(current)
+        }
+        
+        for savedSSID in savedSSIDs {
+            if !addedSSIDs.contains(savedSSID) {
+                ssids.append(savedSSID)
+                addedSSIDs.insert(savedSSID)
+                print("📡 WiFiPickerView: Gespeichertes WiFi hinzugefügt: \(savedSSID)")
+            }
+        }
+        
+        // 3. Bekannte aus Profilen hinzufügen (nur die, die noch nicht in Liste sind)
         for knownSSID in knownSSIDs {
-            if knownSSID != current {
+            if !addedSSIDs.contains(knownSSID) {
                 ssids.append(knownSSID)
+                addedSSIDs.insert(knownSSID)
                 print("📡 WiFiPickerView: Bekanntes WiFi hinzugefügt: \(knownSSID)")
             }
         }
@@ -546,13 +548,43 @@ struct WiFiPickerView: View {
         return ssids
     }
     
+    private func loadSavedSSIDs() {
+        guard !isLoadingSSIDs else { return }
+        
+        isLoadingSSIDs = true
+        ssidLoadError = nil
+        
+        DispatchQueue.global(qos: .userInitiated).async {
+            let ssids = WiFiManager.shared.getAllSavedWiFiNetworks()
+            
+            DispatchQueue.main.async {
+                self.savedSSIDs = ssids
+                self.isLoadingSSIDs = false
+                
+                if ssids.isEmpty {
+                    // Prüfe ob es ein Fehler war oder einfach keine gespeicherten WLANs
+                    // Wenn wir ein Interface finden konnten, aber keine SSIDs, ist das OK
+                    if WiFiManager.shared.findWiFiInterface() == nil {
+                        self.ssidLoadError = "WiFi-Interface nicht gefunden. Stelle sicher, dass WiFi aktiviert ist."
+                    }
+                } else {
+                    self.ssidLoadError = nil
+                }
+                
+                // Force UI refresh
+                self.refreshID = UUID()
+            }
+        }
+    }
+    
     private var hasLocationPermission: Bool {
         WiFiManager.shared.hasLocationPermission()
     }
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .center, spacing: 8) {
             HStack {
+                Spacer()
                 Picker("WiFi-Netzwerk", selection: $selectedSSID) {
                     ForEach(allSSIDs, id: \.self) { ssid in
                         if let ssid = ssid {
@@ -580,17 +612,41 @@ struct WiFiPickerView: View {
                 
                 Button {
                     refreshID = UUID()
+                    loadSavedSSIDs()
                     print("📡 WiFiPickerView: Manueller Refresh")
                 } label: {
-                    Image(systemName: "arrow.clockwise")
+                    if isLoadingSSIDs {
+                        ProgressView()
+                            .scaleEffect(0.7)
+                    } else {
+                        Image(systemName: "arrow.clockwise")
+                    }
                 }
                 .buttonStyle(.bordered)
                 .help("WiFi-Liste aktualisieren")
+                .disabled(isLoadingSSIDs)
+                Spacer()
+            }
+            
+            // Fehlermeldung beim Laden gespeicherter WLANs
+            if let error = ssidLoadError {
+                HStack {
+                    Spacer()
+                    HStack(spacing: 6) {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .foregroundColor(.orange)
+                        Text(error)
+                            .font(.caption)
+                            .foregroundColor(.orange)
+                    }
+                    Spacer()
+                }
+                .padding(.horizontal, 4)
             }
             
             // Warnung wenn Location Services Berechtigung fehlt
             if !hasLocationPermission {
-                VStack(alignment: .leading, spacing: 8) {
+                VStack(alignment: .center, spacing: 8) {
                     HStack(spacing: 6) {
                         Image(systemName: "exclamationmark.triangle.fill")
                             .foregroundColor(.orange)
@@ -664,7 +720,10 @@ struct WiFiPickerView: View {
             }
         }
         .onAppear {
-            // Starte Timer zum periodischen Aktualisieren
+            // Lade gespeicherte WLANs beim Erscheinen
+            loadSavedSSIDs()
+            
+            // Starte Timer zum periodischen Aktualisieren des aktuellen WiFi
             timer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { _ in
                 refreshID = UUID()
             }

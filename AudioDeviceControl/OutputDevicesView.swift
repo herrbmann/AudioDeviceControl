@@ -15,9 +15,9 @@ struct OutputDevicesView: View {
                 case .offline:
                     subtitle = "Offline"
                 case .active:
-                    subtitle = "Active Output"
+                    subtitle = "Aktive Ausgabe"
                 case .connected:
-                    subtitle = "Connected but not active"
+                    subtitle = "Verbunden, aber nicht aktiv"
                 }
 
                 let color: NSColor = device.statusColorNS

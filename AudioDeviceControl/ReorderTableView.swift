@@ -13,7 +13,7 @@ struct ReorderTableView: View {
             Image(systemName: "arrow.up.arrow.down.circle")
                 .font(.system(size: 14, weight: .semibold))
                 .foregroundColor(.secondary)
-                .accessibilityLabel(Text("Drag to reorder"))
+                .accessibilityLabel(Text("Zum Sortieren ziehen"))
 
             List {
                 ForEach(items, id: \.identityKey) { device in
@@ -31,7 +31,7 @@ struct ReorderTableView: View {
                                 onIgnoreToggle(device)
                             } label: {
                                 Image(systemName: deviceIsIgnored ? "eye.slash" : "eye")
-                                    .help(deviceIsIgnored ? "Ignored" : "Visible")
+                                    .help(deviceIsIgnored ? "Ignoriert" : "Sichtbar")
                             }
                             .buttonStyle(.borderless)
                         } else {
@@ -41,7 +41,7 @@ struct ReorderTableView: View {
                                 AudioState.shared.ignoreDevice(device)
                             } label: {
                                 Image(systemName: isIgnored ? "eye.slash" : "eye")
-                                    .help(isIgnored ? "Ignored" : "Visible")
+                                    .help(isIgnored ? "Ignoriert" : "Sichtbar")
                             }
                             .buttonStyle(.borderless)
                         }

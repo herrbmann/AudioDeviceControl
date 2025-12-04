@@ -46,30 +46,6 @@ struct MainProfileView: View {
             .onReceive(NotificationCenter.default.publisher(for: .showSettingsRequested)) { _ in
                 showSettings = true
             }
-            .onReceive(NotificationCenter.default.publisher(for: .resetMainViewRequested)) { _ in
-                // Reset auf Main View beim Schließen des Popovers
-                showSettings = false
-                showProfileEditor = false
-                editingProfile = nil
-            }
-            .onChange(of: showProfileEditor) { _, isEditorVisible in
-                // Höhe anpassen, wenn Editor geöffnet/geschlossen wird
-                let height: CGFloat = isEditorVisible ? 800 : 600
-                NotificationCenter.default.post(
-                    name: .adjustPopoverSizeRequested,
-                    object: nil,
-                    userInfo: ["height": height]
-                )
-            }
-            .onChange(of: showSettings) { _, isSettingsVisible in
-                // Höhe anpassen, wenn Settings geöffnet/geschlossen werden
-                let height: CGFloat = 600
-                NotificationCenter.default.post(
-                    name: .adjustPopoverSizeRequested,
-                    object: nil,
-                    userInfo: ["height": height]
-                )
-            }
             
             // Content - nimmt verfügbaren Platz
             Group {
@@ -99,32 +75,57 @@ struct MainProfileView: View {
             VStack(spacing: 0) {
                 Divider()
                 
-                HStack {
-                    Button("Quit App") {
-                        showQuitConfirm = true
+                if showProfileEditor {
+                    // Profil-Editor Buttons
+                    HStack {
+                        Button("Abbrechen") {
+                            showProfileEditor = false
+                            editingProfile = nil
+                        }
+                        .buttonStyle(.bordered)
+                        
+                        Spacer(minLength: 12)
+                        
+                        Button("Speichern") {
+                            // Sende Notification zum Speichern
+                            NotificationCenter.default.post(name: .saveProfileRequested, object: nil)
+                            showProfileEditor = false
+                        }
+                        .buttonStyle(.borderedProminent)
                     }
-                    .buttonStyle(.bordered)
-                    
-                    Spacer(minLength: 12)
-                    
-                    Button(showSettings ? "Zurück" : "Settings") {
-                        showSettings.toggle()
+                    .padding(.horizontal, 18)
+                    .padding(.top, 12)
+                    .padding(.bottom, 12)
+                } else {
+                    // Standard Buttons
+                    HStack {
+                        Button("App beenden") {
+                            showQuitConfirm = true
+                        }
+                        .buttonStyle(.bordered)
+                        
+                        Spacer(minLength: 12)
+                        
+                        Button(showSettings ? "Zurück" : "Einstellungen") {
+                            showSettings.toggle()
+                        }
+                        .buttonStyle(.bordered)
+                        
+                        Spacer(minLength: 12)
+                        
+                        Button("Schließen") {
+                            NotificationCenter.default.post(name: .closePopoverRequested, object: nil)
+                        }
+                        .buttonStyle(.borderedProminent)
                     }
-                    .buttonStyle(.bordered)
-                    
-                    Spacer(minLength: 12)
-                    
-                    Button("Close") {
-                        NotificationCenter.default.post(name: .closePopoverRequested, object: nil)
-                    }
-                    .buttonStyle(.borderedProminent)
+                    .padding(.horizontal, 18)
+                    .padding(.top, 12)
+                    .padding(.bottom, 12)
                 }
-                .padding(.horizontal, 18)
-                .padding(.top, 12)
-                .padding(.bottom, 12)
             }
         }
         .frame(minWidth: 520, maxWidth: 520)
+        .frame(minHeight: showProfileEditor ? 800 : 400)
         .background(Color(NSColor.windowBackgroundColor))
         .alert("Profil löschen?", isPresented: $showDeleteConfirm) {
             Button("Abbrechen", role: .cancel) {
@@ -226,7 +227,7 @@ struct ProfileTabView: View {
                     
                     if let activeInput = audioState.inputDevices.first(where: { $0.state == .active }) {
                         HStack(spacing: 6) {
-                            Text("Input:")
+                            Text("Eingabe:")
                                 .foregroundColor(.secondary)
                             Text(activeInput.name)
                                 .foregroundColor(.primary)
@@ -236,7 +237,7 @@ struct ProfileTabView: View {
                     
                     if let activeOutput = audioState.outputDevices.first(where: { $0.state == .active }) {
                         HStack(spacing: 6) {
-                            Text("Output:")
+                            Text("Ausgabe:")
                                 .foregroundColor(.secondary)
                             Text(activeOutput.name)
                                 .foregroundColor(.primary)

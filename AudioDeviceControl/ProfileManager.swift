@@ -184,44 +184,6 @@ final class ProfileManager: ObservableObject {
         return Array(Set(ssids)).sorted()
     }
     
-    // MARK: - Device Management
-    
-    func removeDeviceFromAllProfiles(uid: String) {
-        var hasChanges = false
-        
-        for i in profiles.indices {
-            var profile = profiles[i]
-            var changed = false
-            
-            // Entferne aus inputOrder
-            if profile.inputOrder.contains(uid) {
-                profile.inputOrder.removeAll { $0 == uid }
-                changed = true
-            }
-            
-            // Entferne aus outputOrder
-            if profile.outputOrder.contains(uid) {
-                profile.outputOrder.removeAll { $0 == uid }
-                changed = true
-            }
-            
-            if changed {
-                profiles[i] = profile
-                hasChanges = true
-            }
-        }
-        
-        if hasChanges {
-            saveProfiles()
-            
-            // Aktualisiere aktives Profil falls nötig
-            if let activeProfile = activeProfile,
-               let index = profiles.firstIndex(where: { $0.id == activeProfile.id }) {
-                self.activeProfile = profiles[index]
-            }
-        }
-    }
-    
     // MARK: - Helper
     
     func getProfile(by id: UUID) -> Profile? {

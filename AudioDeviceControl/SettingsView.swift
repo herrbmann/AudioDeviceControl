@@ -15,7 +15,7 @@ struct SettingsView: View {
                 VStack(spacing: 12) {
                     // Buy me a coffee
                     VStack(spacing: 8) {
-                        Text("Like my app? Feel free to")
+                        Text("Gefällt dir die App? Dann")
                             .font(.callout)
                             .foregroundColor(.secondary)
                         
@@ -29,7 +29,7 @@ struct SettingsView: View {
                                 HStack(spacing: 6) {
                                     Image(systemName: "cup.and.saucer")
                                         .imageScale(.small)
-                                    Text("Buy me a coffee")
+                                    Text("Kauf mir einen Kaffee")
                                 }
                                 .padding(.horizontal, 10)
                                 .padding(.vertical, 6)
@@ -56,7 +56,7 @@ struct SettingsView: View {
                         VStack(spacing: 8) {
                             HStack {
                                 Spacer(minLength: 0)
-                                Toggle("Start app on login", isOn: $launchAtLogin)
+                                Toggle("App beim Anmelden starten", isOn: $launchAtLogin)
                                     .onChange(of: launchAtLogin) { _, newValue in
                                         do {
                                             try LoginItemManager.setEnabled(newValue)
@@ -72,7 +72,7 @@ struct SettingsView: View {
                             
                             HStack {
                                 Spacer(minLength: 0)
-                                Toggle("Automatically check for updates", isOn: $updateCheckEnabled)
+                                Toggle("Automatisch nach Updates suchen", isOn: $updateCheckEnabled)
                                     .onChange(of: updateCheckEnabled) { _, newValue in
                                         UpdateStore.shared.setUpdateCheckEnabled(newValue)
                                     }
@@ -93,14 +93,6 @@ struct SettingsView: View {
                         }
                         .padding(.horizontal, 18)
                         .padding(.vertical, 8)
-                    }
-                    
-                    Divider()
-                        .padding(.horizontal, 18)
-                    
-                    // Ignore Devices Sektion
-                    VStack(alignment: .leading, spacing: 12) {
-                        IgnoreDevicesView()
                     }
                     
                     Divider()
@@ -175,7 +167,7 @@ struct SettingsView: View {
                 }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .alert("Couldn't update Login Item", isPresented: .constant(errorMessage != nil)) {
+        .alert("Login-Element konnte nicht aktualisiert werden", isPresented: .constant(errorMessage != nil)) {
             Button("OK", role: .cancel) { errorMessage = nil }
         } message: {
             Text(errorMessage ?? "")

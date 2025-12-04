@@ -15,9 +15,9 @@ struct InputDevicesView: View {
                 case .offline:
                     subtitle = "Offline"
                 case .active:
-                    subtitle = "Active Input"
+                    subtitle = "Aktive Eingabe"
                 case .connected:
-                    subtitle = "Connected but not active"
+                    subtitle = "Verbunden, aber nicht aktiv"
                 }
 
                 let color: NSColor = device.statusColorNS

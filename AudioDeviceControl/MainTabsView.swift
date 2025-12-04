@@ -27,8 +27,8 @@ struct MainTabsView: View {
 
             // ✳️ Tabs darunter
             Picker("", selection: $selectedTab) {
-                Text("Output").tag(0)
-                Text("Input").tag(1)
+                Text("Ausgabe").tag(0)
+                Text("Eingabe").tag(1)
             }
             .pickerStyle(.segmented)
             .padding(.horizontal, 20)
@@ -48,11 +48,11 @@ struct MainTabsView: View {
             // ✳️ Tutorial / Short Description
             VStack(spacing: 8) {
 
-                Text("Drag & drop to set your preferred priority.")
+                Text("Per Drag & Drop kannst du deine bevorzugte Priorität festlegen.")
                     .font(.callout)
                     .foregroundColor(.secondary)
 
-                Text("AudioDeviceControl automatically selects the highest available device.")
+                Text("AudioDeviceControl wählt automatisch das höchste verfügbare Gerät aus.")
                     .font(.callout)
                     .foregroundColor(.secondary)
 
@@ -61,17 +61,17 @@ struct MainTabsView: View {
                     HStack(spacing: 6) {
                         Text("●")
                             .foregroundColor(.green)
-                        Text("Green = Active device")
+                        Text("Grün = Aktives Gerät")
                     }
                     HStack(spacing: 6) {
                         Text("●")
                             .foregroundColor(.blue)
-                        Text("Blue = Connected but not active")
+                        Text("Blau = Verbunden, aber nicht aktiv")
                     }
                     HStack(spacing: 6) {
                         Text("●")
                             .foregroundColor(.gray)
-                        Text("Gray = Offline or not available")
+                        Text("Grau = Offline oder nicht verfügbar")
                     }
                 }
                 .font(.callout)
@@ -79,7 +79,7 @@ struct MainTabsView: View {
                 .padding(.top, 4)
 
                 // Welche Geräte angezeigt werden
-                Text("Only real input/output audio devices are shown — virtual routing devices are hidden to keep this list clean.")
+                Text("Nur echte Eingabe-/Ausgabe-Audiogeräte werden angezeigt — virtuelle Routing-Geräte sind ausgeblendet, um die Liste übersichtlich zu halten.")
                     .font(.callout)
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
@@ -98,7 +98,7 @@ struct MainTabsView: View {
             VStack(spacing: 8) {
                 HStack {
                     Spacer(minLength: 0)
-                    Toggle("start app on login", isOn: $launchAtLogin)
+                    Toggle("App beim Anmelden starten", isOn: $launchAtLogin)
                         .onChange(of: launchAtLogin) { oldValue, newValue in
                             do {
                                 try LoginItemManager.setEnabled(newValue)
@@ -116,7 +116,7 @@ struct MainTabsView: View {
                 
                 HStack {
                     Spacer(minLength: 0)
-                    Toggle("automatically check for updates", isOn: $updateCheckEnabled)
+                    Toggle("Automatisch nach Updates suchen", isOn: $updateCheckEnabled)
                         .onChange(of: updateCheckEnabled) { oldValue, newValue in
                             UpdateStore.shared.setUpdateCheckEnabled(newValue)
                         }
@@ -131,7 +131,7 @@ struct MainTabsView: View {
                 .padding(.horizontal, 18)
 
             VStack(spacing: 8) {
-                Text("Like my app? Feel free to")
+                Text("Gefällt dir die App? Dann")
                     .font(.callout)
                     .foregroundColor(.secondary)
 
@@ -146,7 +146,7 @@ struct MainTabsView: View {
                         HStack(spacing: 6) {
                             Image(systemName: "cup.and.saucer")
                                 .imageScale(.small)
-                            Text("Buy me a coffee")
+                            Text("Kauf mir einen Kaffee")
                         }
                         .padding(.horizontal, 10)
                         .padding(.vertical, 6)
@@ -233,14 +233,14 @@ struct MainTabsView: View {
 
             // ✳️ Bottom Buttons: Beenden (links) & Close (rechts)
             HStack {
-                Button("Quit App") {
+                Button("App beenden") {
                     showQuitConfirm = true
                 }
                 .buttonStyle(.bordered)
 
                 Spacer(minLength: 12)
 
-                Button("Close") {
+                Button("Schließen") {
                     // Close the popover via notification to StatusBarController
                     NotificationCenter.default.post(name: .closePopoverRequested, object: nil)
                 }
@@ -254,7 +254,7 @@ struct MainTabsView: View {
             launchAtLogin = LoginItemManager.isEnabled
             updateCheckEnabled = UpdateStore.shared.isUpdateCheckEnabled()
         }
-        .alert("Couldn't update Login Item", isPresented: .constant(errorMessage != nil)) {
+        .alert("Login-Element konnte nicht aktualisiert werden", isPresented: .constant(errorMessage != nil)) {
             Button("OK", role: .cancel) { errorMessage = nil }
         } message: {
             Text(errorMessage ?? "")
