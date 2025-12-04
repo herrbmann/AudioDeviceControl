@@ -2,6 +2,24 @@
 
 ## [Unreleased] - 2024-12-XX
 
+- **WiFi-Verbesserungen**: 
+  - Zugriff auf alle gespeicherten macOS WLANs im Dropdown (nicht nur aktuell verbundenes)
+  - Automatische Erkennung des WiFi-Interfaces
+  - Bei unbekanntem WiFi bleibt das aktuelle Profil aktiv (kein automatischer Wechsel)
+- **Profil-Editor Redesign**: 
+  - Speichern/Abbrechen-Buttons jetzt unten statt oben für bessere Navigation
+  - Quit/Settings/Close-Buttons während Bearbeitung ausgeblendet
+  - Zentrierte Elemente (Icons, Farben, WiFi-Auswahl, Standardprofil-Checkbox)
+  - Mehr Platz für Geräte-Listen (Fensterhöhe auf 800px erhöht)
+  - Visuelle Separators zwischen den einzelnen Bereichen
+  - Einheitliche Überschriften-Formatierung für bessere Übersicht
+  - Farbcode-Legende ("Geräte-Prioritäten") über Output-Geräten positioniert
+  - Erhöhter Abstand zwischen Blöcken für aufgeräumteres Layout
+- **Deutsche Übersetzungen**: 
+  - Konsistente Begriffe: "Geräte-Prioritäten", "Ausgabe-Geräte", "Eingabe-Geräte"
+  - Farbcode-Legende vollständig auf Deutsch (Grün/Blau/Grau)
+  - Erklärung für Standardprofil auf Deutsch
+
 ### Neu hinzugefügt
 
 #### WiFi-basierter automatischer Profilwechsel
