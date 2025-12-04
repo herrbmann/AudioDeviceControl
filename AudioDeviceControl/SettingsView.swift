@@ -7,6 +7,8 @@ struct SettingsView: View {
     @State private var launchAtLogin = false
     @State private var updateCheckEnabled = true
     @State private var wifiAutoSwitchEnabled = false
+    @State private var soundFeedbackEnabled = false
+    @State private var soundFeedbackVolume = 30
     @State private var errorMessage: String?
     @ObservedObject private var updateChecker = UpdateChecker.shared
     
@@ -89,6 +91,48 @@ struct SettingsView: View {
                                     }
                                     .toggleStyle(.checkbox)
                                 Spacer(minLength: 0)
+                            }
+                        }
+                        .padding(.horizontal, 18)
+                        .padding(.vertical, 8)
+                    }
+                    
+                    Divider()
+                        .padding(.horizontal, 18)
+                    
+                    // Sound-Feedback Settings
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Sound-Feedback")
+                            .font(.headline)
+                            .padding(.horizontal, 18)
+                            .padding(.top, 8)
+                        
+                        VStack(spacing: 8) {
+                            HStack {
+                                Spacer(minLength: 0)
+                                Toggle("Sound-Feedback aktivieren", isOn: $soundFeedbackEnabled)
+                                    .onChange(of: soundFeedbackEnabled) { _, newValue in
+                                        SoundFeedbackStore.shared.setEnabled(newValue)
+                                    }
+                                    .toggleStyle(.checkbox)
+                                Spacer(minLength: 0)
+                            }
+                            
+                            if soundFeedbackEnabled {
+                                VStack(alignment: .center, spacing: 4) {
+                                    Text("Lautstärke: \(soundFeedbackVolume)%")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                    
+                                    Slider(value: Binding(
+                                        get: { Double(soundFeedbackVolume) },
+                                        set: { soundFeedbackVolume = Int($0) }
+                                    ), in: 0...100, step: 5)
+                                    .frame(width: 200)
+                                    .onChange(of: soundFeedbackVolume) { _, newValue in
+                                        SoundFeedbackStore.shared.setVolume(newValue)
+                                    }
+                                }
                             }
                         }
                         .padding(.horizontal, 18)
@@ -182,6 +226,8 @@ struct SettingsView: View {
             launchAtLogin = LoginItemManager.isEnabled
             updateCheckEnabled = UpdateStore.shared.isUpdateCheckEnabled()
             wifiAutoSwitchEnabled = WiFiStore.shared.isWiFiAutoSwitchEnabled()
+            soundFeedbackEnabled = SoundFeedbackStore.shared.isEnabled()
+            soundFeedbackVolume = SoundFeedbackStore.shared.getVolume()
         }
     }
 }

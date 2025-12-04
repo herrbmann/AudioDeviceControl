@@ -311,6 +311,9 @@ final class AudioState: ObservableObject {
     }
     
     func switchToProfile(_ profile: Profile) {
+        // Prüfe ob es ein echter Wechsel ist (nicht das gleiche Profil)
+        let wasDifferentProfile = profileManager.activeProfile?.id != profile.id
+        
         // Wechselt Profil und aktiviert Geräte automatisch
         profileManager.setActiveProfile(profile)
         refresh()
@@ -318,6 +321,13 @@ final class AudioState: ObservableObject {
         // Warte kurz, dann aktiviere Geräte
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
             self.applyAutoSelection()
+        }
+        
+        // Sound-Feedback bei Profil-Wechsel - verzögert, damit Audio-Geräte bereit sind
+        if wasDifferentProfile {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                SoundFeedbackManager.shared.playSound(for: .profileSwitch)
+            }
         }
     }
 }

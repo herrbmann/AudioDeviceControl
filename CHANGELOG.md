@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.3] - 2024-12-XX
+
+### Neu hinzugefügt
+
+- **Automatischer Profilwechsel per WiFi**: Profile können einem WiFi-Netzwerk zugeordnet werden. Die App wechselt automatisch zum passenden Profil bei WiFi-Änderung.
+- **Sound-Feedback**: Optionaler Audio-Feedback bei Profil-Wechseln mit konfigurierbarer Lautstärke.
+- **Benachrichtigungen**: Push-Benachrichtigungen bei automatischen Profil-Wechseln.
+- **Geräte-Übersicht in Profil-Karten**: Aktive Input- und Output-Geräte werden direkt in den Profil-Karten angezeigt.
+- **Ignorier-Liste pro Profil**: Jedes Profil verwaltet seine eigene Liste ignorierter Geräte.
+- **Globale Geräte-Verwaltung**: Geräte können komplett aus dem App-Gedächtnis gelöscht werden.
+
+### Verbesserungen
+
+- Dark Mode Optimierungen für bessere Lesbarkeit
+- Zentrierte Lautstärke-Einstellung im Sound-Feedback-Bereich
+
 ## [Unreleased] - 2024-12-XX
 
 - **WiFi-Verbesserungen**: 

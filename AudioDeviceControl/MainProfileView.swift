@@ -267,16 +267,26 @@ struct ProfileCardView: View {
     let onEdit: () -> Void
     let onDelete: () -> Void
     
+    @ObservedObject private var audioState = AudioState.shared
+    
     var body: some View {
         HStack(spacing: 12) {
             // Emoji
             Text(profile.icon)
                 .font(.system(size: 32))
             
-            // Name
-            Text(profile.name)
-                .font(.headline)
-                .foregroundColor(.primary)
+            // Name und Mini-Map
+            VStack(alignment: .leading, spacing: 4) {
+                Text(profile.name)
+                    .font(.headline)
+                    .foregroundColor(.primary)
+                
+                DevicePriorityMiniMap(
+                    activeOutputDevice: activeOutputDeviceForProfile,
+                    activeInputDevice: activeInputDeviceForProfile,
+                    isProfileActive: isActive
+                )
+            }
             
             Spacer()
             
@@ -301,7 +311,7 @@ struct ProfileCardView: View {
                 .foregroundColor(.red)
             }
         }
-        .padding()
+        .padding(12)
         .background(
             RoundedRectangle(cornerRadius: 8)
                 .fill(Color(hex: profile.color).opacity(0.2))
@@ -318,6 +328,24 @@ struct ProfileCardView: View {
             if !isActive {
                 onActivate()
             }
+        }
+    }
+    
+    private var activeOutputDeviceForProfile: AudioDevice? {
+        // Finde das aktive Output-Gerät aus dem Profil
+        return audioState.outputDevices.first { device in
+            device.state == .active && 
+            profile.outputOrder.contains(device.persistentUID) &&
+            !profile.ignoredOutputUIDs.contains(device.persistentUID)
+        }
+    }
+    
+    private var activeInputDeviceForProfile: AudioDevice? {
+        // Finde das aktive Input-Gerät aus dem Profil
+        return audioState.inputDevices.first { device in
+            device.state == .active && 
+            profile.inputOrder.contains(device.persistentUID) &&
+            !profile.ignoredInputUIDs.contains(device.persistentUID)
         }
     }
 }
