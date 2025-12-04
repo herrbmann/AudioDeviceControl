@@ -34,16 +34,6 @@ struct ReorderTableView: View {
                                     .help(deviceIsIgnored ? "Ignoriert" : "Sichtbar")
                             }
                             .buttonStyle(.borderless)
-                        } else {
-                            // Fallback zu altem Verhalten
-                            let isIgnored = PriorityStore.shared.loadIgnoredUIDs().contains(device.persistentUID)
-                            Button {
-                                AudioState.shared.ignoreDevice(device)
-                            } label: {
-                                Image(systemName: isIgnored ? "eye.slash" : "eye")
-                                    .help(isIgnored ? "Ignoriert" : "Sichtbar")
-                            }
-                            .buttonStyle(.borderless)
                         }
                     }
                     .padding(.vertical, 4)

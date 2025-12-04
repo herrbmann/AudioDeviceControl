@@ -98,6 +98,12 @@ struct SettingsView: View {
                     Divider()
                         .padding(.horizontal, 18)
                     
+                    // Alle Geräte (zum Löschen)
+                    DeletedDevicesView()
+                    
+                    Divider()
+                        .padding(.horizontal, 18)
+                    
                     // App Info
                     VStack(spacing: 4) {
                         if let url = URL(string: "mailto:audiocontrol@techbude.com") {

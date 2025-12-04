@@ -3,6 +3,7 @@ import SwiftUI
 struct DeviceReorderList: View {
     @Binding var devices: [AudioDevice]
     let deviceType: String
+    var onIgnore: ((AudioDevice) -> Void)? = nil
     
     var body: some View {
         VStack(spacing: 6) {
@@ -26,7 +27,21 @@ struct DeviceReorderList: View {
             } else {
                 List {
                     ForEach(devices, id: \.identityKey) { device in
-                        DeviceRowView(device: device)
+                        HStack {
+                            DeviceRowView(device: device)
+                            
+                            if let onIgnore = onIgnore {
+                                Button {
+                                    onIgnore(device)
+                                } label: {
+                                    Image(systemName: "eye.slash.fill")
+                                        .foregroundColor(.orange)
+                                        .font(.system(size: 14))
+                                }
+                                .buttonStyle(.borderless)
+                                .help("Gerät ignorieren")
+                            }
+                        }
                         .listRowBackground(Color.clear)
                         .listRowInsets(EdgeInsets(top: 2, leading: 6, bottom: 2, trailing: 6))
                     }

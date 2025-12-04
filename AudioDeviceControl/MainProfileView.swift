@@ -46,6 +46,12 @@ struct MainProfileView: View {
             .onReceive(NotificationCenter.default.publisher(for: .showSettingsRequested)) { _ in
                 showSettings = true
             }
+            .onReceive(NotificationCenter.default.publisher(for: .popoverDidClose)) { _ in
+                // Setze State zurück, wenn Popover geschlossen wird
+                showSettings = false
+                showProfileEditor = false
+                editingProfile = nil
+            }
             
             // Content - nimmt verfügbaren Platz
             Group {
@@ -171,6 +177,8 @@ struct ProfileTabView: View {
                             profile: profile,
                             isActive: profileManager.activeProfile?.id == profile.id,
                             onActivate: {
+                                // Manueller Wechsel: Profil sperren
+                                profileManager.setManuallyLocked(profile)
                                 profileManager.setActiveProfile(profile)
                                 audioState.switchToProfile(profile)
                             },

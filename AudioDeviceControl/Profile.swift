@@ -7,6 +7,8 @@ struct Profile: Identifiable, Codable, Equatable {
     var color: String // Hex-Farbe
     var inputOrder: [String] // Device UIDs
     var outputOrder: [String] // Device UIDs
+    var ignoredInputUIDs: [String] // Ignorierte Input-Geräte für dieses Profil
+    var ignoredOutputUIDs: [String] // Ignorierte Output-Geräte für dieses Profil
     var isDefault: Bool
     var wifiSSID: String? // Optional: WiFi-SSID für automatischen Wechsel
     
@@ -16,6 +18,8 @@ struct Profile: Identifiable, Codable, Equatable {
          color: String,
          inputOrder: [String] = [],
          outputOrder: [String] = [],
+         ignoredInputUIDs: [String] = [],
+         ignoredOutputUIDs: [String] = [],
          isDefault: Bool = false,
          wifiSSID: String? = nil) {
         self.id = id
@@ -24,8 +28,55 @@ struct Profile: Identifiable, Codable, Equatable {
         self.color = color
         self.inputOrder = inputOrder
         self.outputOrder = outputOrder
+        self.ignoredInputUIDs = ignoredInputUIDs
+        self.ignoredOutputUIDs = ignoredOutputUIDs
         self.isDefault = isDefault
         self.wifiSSID = wifiSSID
+    }
+    
+    // MARK: - Codable mit Migration Support für fehlende Properties
+    enum CodingKeys: String, CodingKey {
+        case id
+        case name
+        case icon
+        case color
+        case inputOrder
+        case outputOrder
+        case ignoredInputUIDs
+        case ignoredOutputUIDs
+        case isDefault
+        case wifiSSID
+    }
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        
+        id = try container.decode(UUID.self, forKey: .id)
+        name = try container.decode(String.self, forKey: .name)
+        icon = try container.decode(String.self, forKey: .icon)
+        color = try container.decode(String.self, forKey: .color)
+        inputOrder = try container.decodeIfPresent([String].self, forKey: .inputOrder) ?? []
+        outputOrder = try container.decodeIfPresent([String].self, forKey: .outputOrder) ?? []
+        // Neue Properties: Wenn nicht vorhanden, verwende leere Arrays (Migration)
+        ignoredInputUIDs = try container.decodeIfPresent([String].self, forKey: .ignoredInputUIDs) ?? []
+        ignoredOutputUIDs = try container.decodeIfPresent([String].self, forKey: .ignoredOutputUIDs) ?? []
+        isDefault = try container.decodeIfPresent(Bool.self, forKey: .isDefault) ?? false
+        wifiSSID = try container.decodeIfPresent(String.self, forKey: .wifiSSID)
+    }
+    
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        
+        try container.encode(id, forKey: .id)
+        try container.encode(name, forKey: .name)
+        try container.encode(icon, forKey: .icon)
+        try container.encode(color, forKey: .color)
+        try container.encode(inputOrder, forKey: .inputOrder)
+        try container.encode(outputOrder, forKey: .outputOrder)
+        try container.encode(ignoredInputUIDs, forKey: .ignoredInputUIDs)
+        try container.encode(ignoredOutputUIDs, forKey: .ignoredOutputUIDs)
+        try container.encode(isDefault, forKey: .isDefault)
+        try container.encodeIfPresent(wifiSSID, forKey: .wifiSSID)
     }
 }
 

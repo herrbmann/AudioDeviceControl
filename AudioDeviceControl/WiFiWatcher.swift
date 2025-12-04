@@ -1,4 +1,5 @@
 import Foundation
+import UserNotifications
 
 final class WiFiWatcher {
     static let shared = WiFiWatcher()
@@ -71,18 +72,35 @@ final class WiFiWatcher {
         
         print("📡 WiFiWatcher: WiFi geändert zu: \(ssid)")
         
-        // Suche Profil mit dieser SSID
         let profileManager = ProfileManager.shared
+        
+        // Suche Profil mit dieser SSID
         if let matchingProfile = profileManager.profiles.first(where: { $0.wifiSSID == ssid }) {
             // Nur wechseln, wenn es nicht bereits aktiv ist
             if profileManager.activeProfile?.id != matchingProfile.id {
-                print("📡 WiFiWatcher: Wechsle zu Profil: \(matchingProfile.name)")
+                // WiFi-Wechsel: Immer wechseln, auch wenn aktuelles Profil gesperrt ist
+                // Die Sperre wird beim WiFi-Wechsel aufgehoben
+                print("📡 WiFiWatcher: Wechsle zu Profil: \(matchingProfile.name) (WiFi-Wechsel)")
+                // Sperre aufheben beim automatischen WiFi-Wechsel
+                profileManager.setManuallyLocked(nil)
                 profileManager.setActiveProfile(matchingProfile)
                 AudioState.shared.switchToProfile(matchingProfile)
+                
+                // Sende Notification über automatischen Profil-Wechsel
+                NotificationManager.shared.notifyProfileSwitch(wifiSSID: ssid, profileName: matchingProfile.name)
+            } else {
+                // Profil ist bereits aktiv - keine Aktion nötig
+                print("📡 WiFiWatcher: Profil '\(matchingProfile.name)' ist bereits aktiv")
             }
         } else {
-            print("📡 WiFiWatcher: Kein Profil für SSID '\(ssid)' gefunden - aktuelles Profil bleibt aktiv")
-            // Bei unbekanntem WiFi kein Wechsel - aktuelles Profil bleibt aktiv
+            // Kein Profil für dieses WiFi gefunden
+            // Wenn aktuelles Profil gesperrt ist, bleibt es aktiv
+            // Wenn nicht gesperrt, bleibt es auch aktiv (kein Wechsel nötig)
+            if profileManager.isActiveProfileManuallyLocked() {
+                print("📡 WiFiWatcher: Kein Profil für SSID '\(ssid)' gefunden - gesperrtes Profil bleibt aktiv")
+            } else {
+                print("📡 WiFiWatcher: Kein Profil für SSID '\(ssid)' gefunden - aktuelles Profil bleibt aktiv")
+            }
         }
     }
 }

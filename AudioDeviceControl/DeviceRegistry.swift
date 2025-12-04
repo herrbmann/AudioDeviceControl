@@ -51,6 +51,11 @@ final class DeviceRegistry {
 
     /// Fügt ein Gerät hinzu (inkl. Metadaten) falls neu, oder aktualisiert Metadaten falls bekannt.
     func registerIfNeeded(_ device: AudioDevice) {
+        // Wenn Gerät gelöscht war, entferne es aus der Deleted-Liste (wird wieder aktiviert)
+        if PriorityStore.shared.isDeleted(device.uid) {
+            PriorityStore.shared.removeDeletedUID(device.uid)
+        }
+        
         // UID-Liste pflegen (Kompatibilität)
         var list = storedUIDs
         if !list.contains(device.uid) {
@@ -68,6 +73,11 @@ final class DeviceRegistry {
         var uidSet = Set(storedUIDs)
         var meta = loadMetaDict()
         for dev in devices {
+            // Wenn Gerät gelöscht war, entferne es aus der Deleted-Liste (wird wieder aktiviert)
+            if PriorityStore.shared.isDeleted(dev.uid) {
+                PriorityStore.shared.removeDeletedUID(dev.uid)
+            }
+            
             uidSet.insert(dev.uid)
             meta[dev.uid] = Metadata(name: dev.name, isInput: dev.isInput, isOutput: dev.isOutput)
         }
@@ -78,5 +88,23 @@ final class DeviceRegistry {
     /// Prüft, ob ein Gerät bereits bekannt ist
     func isKnown(_ device: AudioDevice) -> Bool {
         storedUIDs.contains(device.uid)
+    }
+    
+    // MARK: - Entfernen
+    
+    func removeMetadata(for uid: String) {
+        var meta = loadMetaDict()
+        meta.removeValue(forKey: uid)
+        saveMetaDict(meta)
+    }
+    
+    func removeDevice(_ uid: String) {
+        // Entferne aus UID-Liste
+        var list = storedUIDs
+        list.removeAll { $0 == uid }
+        storedUIDs = list
+        
+        // Entferne Metadaten
+        removeMetadata(for: uid)
     }
 }

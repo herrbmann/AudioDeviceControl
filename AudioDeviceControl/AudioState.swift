@@ -44,9 +44,23 @@ final class AudioState: ObservableObject {
             outputOrder = PriorityStore.shared.loadOutputOrder()
         }
         
-        // Ignored Devices sind jetzt global
-        let ignoredUIDs = PriorityStore.shared.loadIgnoredUIDs()
-        let ignored = Set(ignoredUIDs)
+        // Ignored Devices sind jetzt pro Profil
+        let ignoredInputUIDs: [String]
+        let ignoredOutputUIDs: [String]
+        
+        if let activeProfile = profileManager.activeProfile {
+            ignoredInputUIDs = activeProfile.ignoredInputUIDs
+            ignoredOutputUIDs = activeProfile.ignoredOutputUIDs
+        } else {
+            // Fallback: Leere Listen wenn kein Profil aktiv
+            ignoredInputUIDs = []
+            ignoredOutputUIDs = []
+        }
+        
+        let ignoredInput = Set(ignoredInputUIDs)
+        let ignoredOutput = Set(ignoredOutputUIDs)
+        let deletedUIDs = PriorityStore.shared.loadDeletedUIDs()
+        let deleted = Set(deletedUIDs)
 
         var inputs: [AudioDevice] = []
         var outputs: [AudioDevice] = []
@@ -66,8 +80,14 @@ final class AudioState: ObservableObject {
                 defaultOutputID: defaultOutputID
             ) else { continue }
 
-            // Skip ignored devices unless showIgnored is enabled
-            if !showIgnored && ignored.contains(device.persistentUID) { continue }
+            // Skip ignored/deleted devices unless showIgnored is enabled
+            if !showIgnored {
+                let isIgnored = (device.isInput && ignoredInput.contains(device.persistentUID)) ||
+                               (device.isOutput && ignoredOutput.contains(device.persistentUID))
+                if isIgnored || deleted.contains(device.persistentUID) {
+                    continue
+                }
+            }
 
             if device.isInput { inputs.append(device) }
             if device.isOutput { outputs.append(device) }
@@ -78,8 +98,8 @@ final class AudioState: ObservableObject {
 
         // Build lists strictly following stored priority order.
         // Missing devices are shown as offline placeholders at their original positions.
-        let newInputDevices  = buildDeviceList(devices: inputs, storedUIDs: inputOrder, wantInput: true, ignored: ignored)
-        let newOutputDevices = buildDeviceList(devices: outputs, storedUIDs: outputOrder, wantInput: false, ignored: ignored)
+        let newInputDevices  = buildDeviceList(devices: inputs, storedUIDs: inputOrder, wantInput: true, ignoredInput: ignoredInput, ignoredOutput: ignoredOutput, deleted: deleted)
+        let newOutputDevices = buildDeviceList(devices: outputs, storedUIDs: outputOrder, wantInput: false, ignoredInput: ignoredInput, ignoredOutput: ignoredOutput, deleted: deleted)
 
         DispatchQueue.main.async {
             self.inputDevices  = newInputDevices
@@ -125,14 +145,23 @@ final class AudioState: ObservableObject {
     private func buildDeviceList(devices: [AudioDevice],
                                  storedUIDs: [String],
                                  wantInput: Bool,
-                                 ignored: Set<String>) -> [AudioDevice] {
+                                 ignoredInput: Set<String>,
+                                 ignoredOutput: Set<String>,
+                                 deleted: Set<String>) -> [AudioDevice] {
         var result: [AudioDevice] = []
 
         // Fast lookup for currently present devices by UID
         let presentByUID: [String: AudioDevice] = Dictionary(uniqueKeysWithValues: devices.map { ($0.persistentUID, $0) })
 
         // 1) Place all stored UIDs in exact order, using present device or offline placeholder
+        // ABER: Ignoriere ignorierte und gelöschte Geräte
         for uid in storedUIDs {
+            // Überspringe ignorierte und gelöschte Geräte
+            let isIgnored = (wantInput && ignoredInput.contains(uid)) || (!wantInput && ignoredOutput.contains(uid))
+            if isIgnored || deleted.contains(uid) {
+                continue
+            }
+            
             if let dev = presentByUID[uid] {
                 result.append(dev)
             } else if let meta = DeviceRegistry.shared.metadata(for: uid) {
@@ -148,15 +177,26 @@ final class AudioState: ObservableObject {
         }
 
         // 2) Append any currently present devices that are not yet in stored order (new devices)
+        // ABER: Ignoriere ignorierte und gelöschte Geräte
         for dev in devices {
             if !result.contains(where: { $0.persistentUID == dev.persistentUID }) {
-                result.append(dev)
+                let isIgnored = (wantInput && ignoredInput.contains(dev.persistentUID)) || (!wantInput && ignoredOutput.contains(dev.persistentUID))
+                if !isIgnored && !deleted.contains(dev.persistentUID) {
+                    result.append(dev)
+                }
             }
         }
 
         // 3) Optionally append any other known devices (not in order, not present) as offline placeholders
+        // ABER: Ignoriere ignorierte und gelöschte Geräte
         let knownUIDs = DeviceRegistry.shared.storedUIDs
         for uid in knownUIDs where !result.contains(where: { $0.persistentUID == uid }) {
+            // Überspringe ignorierte und gelöschte Geräte
+            let isIgnored = (wantInput && ignoredInput.contains(uid)) || (!wantInput && ignoredOutput.contains(uid))
+            if isIgnored || deleted.contains(uid) {
+                continue
+            }
+            
             if let meta = DeviceRegistry.shared.metadata(for: uid) {
                 if (wantInput && meta.isInput) || (!wantInput && meta.isOutput) {
                     let placeholder = AudioDeviceFactory.makeOffline(uid: uid,
@@ -168,9 +208,12 @@ final class AudioState: ObservableObject {
             }
         }
 
-        // Filter out ignored devices unless showIgnored is true
+        // Filter out ignored/deleted devices unless showIgnored is true
         if !showIgnored {
-            result.removeAll { ignored.contains($0.persistentUID) }
+            result.removeAll { device in
+                let isIgnored = (wantInput && ignoredInput.contains(device.persistentUID)) || (!wantInput && ignoredOutput.contains(device.persistentUID))
+                return isIgnored || deleted.contains(device.persistentUID)
+            }
         }
 
         return result
@@ -260,23 +303,6 @@ final class AudioState: ObservableObject {
         }
     }
 
-    // MARK: - Ignore handling (global)
-
-    func ignoreDevice(_ device: AudioDevice) {
-        PriorityStore.shared.addIgnoredUID(device.persistentUID)
-        refresh()
-    }
-
-    func unignoreAllDevices() {
-        PriorityStore.shared.clearIgnoredUIDs()
-        refresh()
-    }
-    
-    func unignoreDevice(_ device: AudioDevice) {
-        PriorityStore.shared.removeIgnoredUID(device.persistentUID)
-        refresh()
-    }
-    
     // MARK: - Profile Management
     
     func loadProfile(_ profile: Profile) {

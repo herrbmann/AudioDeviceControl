@@ -1,13 +1,14 @@
 import Cocoa
 import SwiftUI
 
-class StatusBarController {
+class StatusBarController: NSObject {
 
     private var statusItem: NSStatusItem
     private let popover: NSPopover = NSPopover()
 
-    init() {
+    override init() {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+        super.init()
 
         if let button = statusItem.button {
             // Waveform Icon (Template → automatisch hell/dunkel angepasst)
@@ -23,6 +24,7 @@ class StatusBarController {
         popover.behavior = .transient
         popover.contentSize = NSSize(width: 520, height: 600)
         popover.contentViewController = NSHostingController(rootView: MainProfileView())
+        popover.delegate = self
 
         NotificationCenter.default.addObserver(self, selector: #selector(closePopover), name: .closePopoverRequested, object: nil)
     }
@@ -94,6 +96,8 @@ class StatusBarController {
             return
         }
         
+        // Manueller Wechsel aus Menü: Profil sperren
+        ProfileManager.shared.setManuallyLocked(profile)
         ProfileManager.shared.setActiveProfile(profile)
         AudioState.shared.switchToProfile(profile)
     }
@@ -120,7 +124,14 @@ class StatusBarController {
     @objc private func closePopover() {
         if popover.isShown {
             popover.performClose(nil)
+            // Benachrichtige, dass Popover geschlossen wurde
+            NotificationCenter.default.post(name: .popoverDidClose, object: nil)
         }
+    }
+    
+    // Wird aufgerufen, wenn Popover geschlossen wird (auch durch Klick außerhalb)
+    func popoverDidClose() {
+        NotificationCenter.default.post(name: .popoverDidClose, object: nil)
     }
     
     deinit {
@@ -128,8 +139,17 @@ class StatusBarController {
     }
 }
 
+// MARK: - NSPopoverDelegate
+extension StatusBarController: NSPopoverDelegate {
+    func popoverDidClose(_ notification: Notification) {
+        // Wird aufgerufen, wenn Popover geschlossen wird (auch durch Klick außerhalb)
+        popoverDidClose()
+    }
+}
+
 extension Notification.Name {
     static let closePopoverRequested = Notification.Name("closePopoverRequested")
+    static let popoverDidClose = Notification.Name("popoverDidClose")
     static let showSettingsRequested = Notification.Name("showSettingsRequested")
     static let saveProfileRequested = Notification.Name("saveProfileRequested")
 }

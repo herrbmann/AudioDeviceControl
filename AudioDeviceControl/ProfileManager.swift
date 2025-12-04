@@ -13,15 +13,20 @@ final class ProfileManager: ObservableObject {
     
     private init() {
         loadProfiles()
+        print("📋 ProfileManager: Nach loadProfiles() - \(profiles.count) Profile geladen")
         performMigrationIfNeeded()
         performIgnoredDevicesMigrationIfNeeded()
+        performProfileIgnoredDevicesMigrationIfNeeded()
         loadActiveProfile()
+        print("📋 ProfileManager: Final - \(profiles.count) Profile vorhanden")
     }
     
     // MARK: - Load & Save
     
     private func loadProfiles() {
-        profiles = store.loadProfiles()
+        let loaded = store.loadProfiles()
+        profiles = loaded
+        print("📋 ProfileManager.loadProfiles(): \(loaded.count) Profile geladen")
     }
     
     private func saveProfiles() {
@@ -106,33 +111,38 @@ final class ProfileManager: ObservableObject {
     
     private func performMigrationIfNeeded() {
         guard !store.isMigrationDone() else {
+            print("📋 Migration bereits durchgeführt")
             return
         }
         
-        // Prüfe ob bereits Profile existieren
+        // WICHTIG: Prüfe ob bereits Profile existieren - wenn ja, überspringe Migration
         if !profiles.isEmpty {
+            print("✅ Migration übersprungen: \(profiles.count) Profile bereits vorhanden")
             store.markMigrationDone()
             return
         }
         
-        // Migriere bestehende Prioritäten zu Default-Profil
+        // Nur wenn KEINE Profile existieren: Migriere bestehende Prioritäten zu Default-Profil
         let inputOrder = priorityStore.loadInputOrder()
         let outputOrder = priorityStore.loadOutputOrder()
         
-        let defaultProfile = Profile(
-            name: "Default",
-            icon: "🎧",
-            color: ProfileColorPreset.colors[0].hex, // Blau
-            inputOrder: inputOrder,
-            outputOrder: outputOrder,
-            isDefault: true
-        )
+        // Nur wenn es Prioritäten gibt, erstelle ein Default-Profil
+        if !inputOrder.isEmpty || !outputOrder.isEmpty {
+            let defaultProfile = Profile(
+                name: "Default",
+                icon: "🎧",
+                color: ProfileColorPreset.colors[0].hex, // Blau
+                inputOrder: inputOrder,
+                outputOrder: outputOrder,
+                isDefault: true
+            )
+            
+            profiles.append(defaultProfile)
+            saveProfiles()
+            print("✅ Migration: Default-Profil erstellt mit \(inputOrder.count) Input- und \(outputOrder.count) Output-Geräten")
+        }
         
-        profiles.append(defaultProfile)
-        saveProfiles()
         store.markMigrationDone()
-        
-        print("✅ Migration: Default-Profil erstellt mit \(inputOrder.count) Input- und \(outputOrder.count) Output-Geräten")
     }
     
     private func performIgnoredDevicesMigrationIfNeeded() {
@@ -148,6 +158,24 @@ final class ProfileManager: ObservableObject {
         store.markIgnoredMigrationDone()
         
         print("✅ Ignored Devices Migration: Abgeschlossen - Ignored Devices sind jetzt global")
+    }
+    
+    private func performProfileIgnoredDevicesMigrationIfNeeded() {
+        // Stelle sicher, dass alle Profile die neuen ignoredInputUIDs und ignoredOutputUIDs Properties haben
+        // Der Custom Decoder sollte sie bereits mit leeren Arrays initialisiert haben,
+        // aber wir speichern die Profile explizit, um sicherzustellen, dass sie persistiert werden
+        var needsSave = false
+        
+        for i in profiles.indices {
+            // Stelle sicher, dass die Properties existieren (sollten durch Custom Decoder bereits gesetzt sein)
+            // Aber wir speichern sie explizit, um sicherzustellen, dass sie in UserDefaults gespeichert werden
+            needsSave = true
+        }
+        
+        if needsSave && !profiles.isEmpty {
+            saveProfiles()
+            print("✅ Profile Ignored Devices Migration: \(profiles.count) Profile aktualisiert mit ignoredInputUIDs und ignoredOutputUIDs")
+        }
     }
     
     // MARK: - Default Profile Management
@@ -188,6 +216,35 @@ final class ProfileManager: ObservableObject {
     
     func getProfile(by id: UUID) -> Profile? {
         return profiles.first { $0.id == id }
+    }
+    
+    // MARK: - Manual Lock Management
+    
+    /// Setzt ein Profil als manuell gesperrt (wird nicht durch WiFi-Wechsel überschrieben)
+    func setManuallyLocked(_ profile: Profile?) {
+        if let profile = profile {
+            store.saveManuallyLockedProfileID(profile.id)
+            print("🔒 Profil '\(profile.name)' wurde manuell gesperrt")
+        } else {
+            store.clearManuallyLockedProfileID()
+            print("🔓 Manuelle Sperre wurde aufgehoben")
+        }
+    }
+    
+    /// Prüft ob ein Profil manuell gesperrt ist
+    func isManuallyLocked(_ profile: Profile) -> Bool {
+        guard let lockedID = store.loadManuallyLockedProfileID() else {
+            return false
+        }
+        return profile.id == lockedID
+    }
+    
+    /// Prüft ob das aktive Profil manuell gesperrt ist
+    func isActiveProfileManuallyLocked() -> Bool {
+        guard let activeProfile = activeProfile else {
+            return false
+        }
+        return isManuallyLocked(activeProfile)
     }
 }
 

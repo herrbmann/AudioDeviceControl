@@ -9,6 +9,8 @@ struct ProfileEditorView: View {
     @State private var editingProfile: Profile
     @State private var inputDevices: [AudioDevice] = []
     @State private var outputDevices: [AudioDevice] = []
+    @State private var ignoredInputDevices: [AudioDevice] = []
+    @State private var ignoredOutputDevices: [AudioDevice] = []
     
     init(profile: Profile, isPresented: Binding<Bool>, showSettings: Binding<Bool>) {
         self._editingProfile = State(initialValue: profile)
@@ -235,7 +237,10 @@ struct ProfileEditorView: View {
                         } else {
                             DeviceReorderList(
                                 devices: $outputDevices,
-                                deviceType: "Output"
+                                deviceType: "Output",
+                                onIgnore: { device in
+                                    ignoreDevice(device, isInput: false)
+                                }
                             )
                             .padding(.horizontal, 12)
                         }
@@ -266,9 +271,78 @@ struct ProfileEditorView: View {
                         } else {
                             DeviceReorderList(
                                 devices: $inputDevices,
-                                deviceType: "Input"
+                                deviceType: "Input",
+                                onIgnore: { device in
+                                    ignoreDevice(device, isInput: true)
+                                }
                             )
                             .padding(.horizontal, 12)
+                        }
+                    }
+                    .padding(.top, 8)
+                    
+                    Divider()
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 2)
+                    
+                    // Ignorierte Geräte - ganz unten
+                    VStack(alignment: .leading, spacing: 10) {
+                        HStack {
+                            Spacer()
+                            Text("Ignorierte Geräte")
+                                .font(.headline)
+                            Spacer()
+                        }
+                        .padding(.horizontal, 12)
+                        .padding(.top, 10)
+                        .padding(.bottom, 2)
+                        
+                        Text("Diese Geräte werden in diesem Profil nicht verwendet und erscheinen nicht in der Prioritätsliste.")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .padding(.horizontal, 12)
+                            .padding(.bottom, 4)
+                        
+                        // Ignorierte Output-Geräte
+                        if !ignoredOutputDevices.isEmpty {
+                            VStack(alignment: .leading, spacing: 6) {
+                                Text("Ausgabe-Geräte")
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+                                    .padding(.horizontal, 12)
+                                
+                                VStack(spacing: 4) {
+                                    ForEach(ignoredOutputDevices, id: \.identityKey) { device in
+                                        ignoredDeviceRow(device, isInput: false)
+                                    }
+                                }
+                                .padding(.horizontal, 6)
+                            }
+                            .padding(.bottom, 8)
+                        }
+                        
+                        // Ignorierte Input-Geräte
+                        if !ignoredInputDevices.isEmpty {
+                            VStack(alignment: .leading, spacing: 6) {
+                                Text("Eingabe-Geräte")
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+                                    .padding(.horizontal, 12)
+                                
+                                VStack(spacing: 4) {
+                                    ForEach(ignoredInputDevices, id: \.identityKey) { device in
+                                        ignoredDeviceRow(device, isInput: true)
+                                    }
+                                }
+                                .padding(.horizontal, 6)
+                            }
+                        }
+                        
+                        if ignoredInputDevices.isEmpty && ignoredOutputDevices.isEmpty {
+                            Text("Keine ignorierten Geräte")
+                                .foregroundColor(.secondary)
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 12)
                         }
                     }
                     .padding(.top, 8)
@@ -309,6 +383,11 @@ struct ProfileEditorView: View {
         let defaultInputID = AudioDeviceManager.shared.getDefaultInputDevice()
         let defaultOutputID = AudioDeviceManager.shared.getDefaultOutputDevice()
         
+        // Filtere ignorierte und gelöschte Geräte (profil-basiert)
+        let ignoredInputUIDs = Set(editingProfile.ignoredInputUIDs)
+        let ignoredOutputUIDs = Set(editingProfile.ignoredOutputUIDs)
+        let deletedUIDs = Set(PriorityStore.shared.loadDeletedUIDs())
+        
         print("📋 ProfileEditor: Found \(allInputs.count) total input devices, \(allOutputs.count) total output devices")
         
         // Erstelle Lookup-Maps für schnellen Zugriff
@@ -320,7 +399,13 @@ struct ProfileEditorView: View {
         
         // WICHTIG: Durchlaufe Prioritätsliste in exakter Reihenfolge
         // Jedes Gerät wird an seiner Position hinzugefügt, entweder als verbundenes Gerät oder als Offline-Placeholder
+        // ABER: Ignorierte und gelöschte Geräte werden übersprungen
         for uid in editingProfile.inputOrder {
+            // Überspringe ignorierte und gelöschte Geräte
+            if ignoredInputUIDs.contains(uid) || deletedUIDs.contains(uid) {
+                continue
+            }
+            
             if let device = inputDeviceMap[uid] {
                 // Gerät ist verbunden → verwende es (State wird automatisch korrekt gesetzt)
                 orderedInputs.append(device)
@@ -348,9 +433,28 @@ struct ProfileEditorView: View {
         }
         
         // Neue Geräte (nicht in Prioritätsliste) am Ende hinzufügen
+        // ABER: Ignorierte und gelöschte Geräte werden nicht hinzugefügt
         for device in allInputs {
             if !orderedInputs.contains(where: { $0.persistentUID == device.persistentUID }) {
-                orderedInputs.append(device)
+                if !ignoredInputUIDs.contains(device.persistentUID) && !deletedUIDs.contains(device.persistentUID) {
+                    orderedInputs.append(device)
+                }
+            }
+        }
+        
+        // Baue Liste der ignorierten Input-Geräte
+        var ignoredInputs: [AudioDevice] = []
+        for uid in editingProfile.ignoredInputUIDs {
+            if let device = inputDeviceMap[uid] {
+                ignoredInputs.append(device)
+            } else if let meta = DeviceRegistry.shared.metadata(for: uid), meta.isInput {
+                let placeholder = AudioDeviceFactory.makeOffline(
+                    uid: uid,
+                    name: meta.name,
+                    isInput: true,
+                    isOutput: false
+                )
+                ignoredInputs.append(placeholder)
             }
         }
         
@@ -362,7 +466,13 @@ struct ProfileEditorView: View {
         var orderedOutputs: [AudioDevice] = []
         
         // WICHTIG: Durchlaufe Prioritätsliste in exakter Reihenfolge
+        // ABER: Ignorierte und gelöschte Geräte werden übersprungen
         for uid in editingProfile.outputOrder {
+            // Überspringe ignorierte und gelöschte Geräte
+            if ignoredOutputUIDs.contains(uid) || deletedUIDs.contains(uid) {
+                continue
+            }
+            
             if let device = outputDeviceMap[uid] {
                 // Gerät ist verbunden → verwende es
                 orderedOutputs.append(device)
@@ -390,15 +500,38 @@ struct ProfileEditorView: View {
         }
         
         // Neue Geräte (nicht in Prioritätsliste) am Ende hinzufügen
+        // ABER: Ignorierte und gelöschte Geräte werden nicht hinzugefügt
         for device in allOutputs {
             if !orderedOutputs.contains(where: { $0.persistentUID == device.persistentUID }) {
-                orderedOutputs.append(device)
+                if !ignoredOutputUIDs.contains(device.persistentUID) && !deletedUIDs.contains(device.persistentUID) {
+                    orderedOutputs.append(device)
+                }
             }
         }
         
-        outputDevices = orderedOutputs
+        // Baue Liste der ignorierten Output-Geräte
+        var ignoredOutputs: [AudioDevice] = []
+        for uid in editingProfile.ignoredOutputUIDs {
+            if let device = outputDeviceMap[uid] {
+                ignoredOutputs.append(device)
+            } else if let meta = DeviceRegistry.shared.metadata(for: uid), meta.isOutput {
+                let placeholder = AudioDeviceFactory.makeOffline(
+                    uid: uid,
+                    name: meta.name,
+                    isInput: false,
+                    isOutput: true
+                )
+                ignoredOutputs.append(placeholder)
+            }
+        }
         
-        print("📋 ProfileEditor: Final output devices: \(outputDevices.count)")
+        inputDevices = orderedInputs
+        outputDevices = orderedOutputs
+        ignoredInputDevices = ignoredInputs
+        ignoredOutputDevices = ignoredOutputs
+        
+        print("📋 ProfileEditor: Final input devices: \(inputDevices.count), ignored: \(ignoredInputDevices.count)")
+        print("📋 ProfileEditor: Final output devices: \(outputDevices.count), ignored: \(ignoredOutputDevices.count)")
     }
     
     private func loadAllInputDevices() -> [AudioDevice] {
@@ -477,10 +610,73 @@ struct ProfileEditorView: View {
             }
     }
     
+    private func ignoredDeviceRow(_ device: AudioDevice, isInput: Bool) -> some View {
+        HStack(spacing: 10) {
+            DeviceTableCellView(
+                icon: device.iconNSImage,
+                name: device.name,
+                subtitle: device.state == .offline ? "Offline" : "Ignoriert",
+                statusColor: device.state == .offline ? .systemGray : .orange
+            )
+            
+            Spacer()
+            
+            // Augensymbol zum Ent-ignorieren
+            Button {
+                unignoreDevice(device, isInput: isInput)
+            } label: {
+                Image(systemName: "eye.slash.fill")
+                    .foregroundColor(.orange)
+                    .font(.system(size: 14))
+            }
+            .buttonStyle(.borderless)
+            .help("Ignorierung aufheben")
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .background(Color(NSColor.textBackgroundColor))
+        .cornerRadius(5)
+    }
+    
+    private func ignoreDevice(_ device: AudioDevice, isInput: Bool) {
+        let uid = device.persistentUID
+        
+        if isInput {
+            // Entferne aus inputOrder falls vorhanden
+            editingProfile.inputOrder.removeAll { $0 == uid }
+            // Füge zu ignoredInputUIDs hinzu falls nicht vorhanden
+            if !editingProfile.ignoredInputUIDs.contains(uid) {
+                editingProfile.ignoredInputUIDs.append(uid)
+            }
+        } else {
+            // Entferne aus outputOrder falls vorhanden
+            editingProfile.outputOrder.removeAll { $0 == uid }
+            // Füge zu ignoredOutputUIDs hinzu falls nicht vorhanden
+            if !editingProfile.ignoredOutputUIDs.contains(uid) {
+                editingProfile.ignoredOutputUIDs.append(uid)
+            }
+        }
+        
+        refreshDeviceLists()
+    }
+    
+    private func unignoreDevice(_ device: AudioDevice, isInput: Bool) {
+        let uid = device.persistentUID
+        
+        if isInput {
+            editingProfile.ignoredInputUIDs.removeAll { $0 == uid }
+        } else {
+            editingProfile.ignoredOutputUIDs.removeAll { $0 == uid }
+        }
+        
+        refreshDeviceLists()
+    }
+    
     func saveProfile() {
         // Speichere Prioritäten
         editingProfile.inputOrder = inputDevices.map { $0.persistentUID }
         editingProfile.outputOrder = outputDevices.map { $0.persistentUID }
+        // Ignorierte Geräte sind bereits in editingProfile.ignoredInputUIDs/ignoredOutputUIDs
         
         // Aktualisiere Profil im Manager
         profileManager.updateProfile(editingProfile)

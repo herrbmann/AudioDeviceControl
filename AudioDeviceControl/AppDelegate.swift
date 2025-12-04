@@ -10,6 +10,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         statusBarController = StatusBarController()
         _ = DeviceWatcher.shared
         _ = WiFiWatcher.shared
+        _ = NotificationManager.shared // Initialize notification manager
         NSApp.setActivationPolicy(.accessory)
         
         // Request Location Services permission for WiFi detection
